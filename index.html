@@ -105,6 +105,9 @@ textarea { resize: vertical; }
   <section id="settings" style="display:none;">
     <div class="card">
       <h2>Import / Export Data</h2>
+      <label>Export Version (optional)
+        <input type="text" id="export-version" placeholder="e.g. v1.0, family-gettogether">
+      </label>
       <button class="export" id="export-btn">Export JSON</button>
       <label>Import JSON
         <input type="file" id="import-file" accept=".json" />
@@ -450,8 +453,29 @@ document.getElementById("export-btn").onclick = () => {
   const blob = new Blob([data], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
-  a.download = "sous_list_backup.json";
+
+  // --- New Filename Logic ---
+  const versionInput = document.getElementById("export-version").value.trim();
+  // Sanitize by removing characters not allowed in filenames
+  const sanitizedVersion = versionInput.replace(/[\\/:"*?<>|]/g, ''); 
+  
+  const date = new Date();
+  const year = date.getFullYear();
+  const month = (date.getMonth() + 1).toString().padStart(2, '0');
+  const day = date.getDate().toString().padStart(2, '0');
+  const dateString = `${year}-${month}-${day}`;
+  
+  let filename = "SOUS-List_";
+  if (sanitizedVersion) {
+    filename += `${sanitizedVersion}_`;
+  }
+  filename += `${dateString}.json`;
+  
+  a.download = filename;
+  // --- End New Filename Logic ---
+  
   a.click();
+  URL.revokeObjectURL(a.href); // Clean up
 };
 
 document.getElementById("import-file").onchange = e => {
