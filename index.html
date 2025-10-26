@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>SOUS List</title>
+<style>
+body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #f4f4f8; }
+header { background: #222; color: #fff; padding: 1em; text-align: center; }
+nav { display: flex; justify-content: center; background: #333; }
+nav button { background: none; border: none; color: #fff; padding: 1em; cursor: pointer; }
+nav button.active { background: #555; }
+.container { padding: 1em; max-width: 900px; margin: auto; }
+.card { background: white; padding: 1em; border-radius: 8px; margin-bottom: 1em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+label { display: block; margin-top: 0.5em; font-weight: bold; }
+input, select, textarea { 
+    width: 100%; 
+    padding: 0.5em; 
+    margin-top: 0.25em; 
+    box-sizing: border-box; /* Important for width */
+}
+button { margin-top: 0.5em; padding: 0.5em 1em; border-radius: 5px; border: none; cursor: pointer; }
+button.save { background: #4caf50; color: white; }
+button.delete { background: #f44336; color: white; }
+button.export { background: #2196f3; color: white; }
+button.secondary { background: #777; color: white; }
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1em; }
+pre { background: #eee; padding: 1em; white-space: pre-wrap; word-wrap: break-word; border-radius: 5px; }
+textarea { resize: vertical; }
+
+/* New styles for ingredient rows */
+.ingredient-row {
+    display: grid;
+    grid-template-columns: 3fr 2fr 1fr 1fr;
+    gap: 0.5em;
+    align-items: center;
+    margin-bottom: 0.5em;
+}
+.ingredient-row label {
+    margin: 0;
+    font-size: 0.8em;
+}
+.ingredient-row input, .ingredient-row select {
+    margin: 0;
+}
+.ingredient-row button.delete {
+    padding: 0.5em;
+    margin: 0;
+}
+
+/* Planner day controls */
+.day-controls {
+    display: flex;
+    gap: 0.5em;
+    margin-bottom: 1em;
+}
+.day-controls button {
+    font-size: 1.2em;
+    padding: 0 0.75em;
+    margin: 0;
+}
+</style>
+</head>
+<body>
+<header><h1>🍽️ Smart Organized User Shopping List (SOUS List)</h1></header>
+<nav>
+  <button id="tab-dictionary" class="active">Dinner Dictionary</button>
+  <button id="tab-planner">Weekly Planner</button>
+  <button id="tab-settings">Settings</button>
+</nav>
+
+<div class="container">
+  <section id="dictionary">
+    <div class="card">
+      <h2>Add / Edit Dinner</h2>
+      <label>Title <input id="meal-title" placeholder="e.g. Taco Salad & Quesadillas" /></label>
+      <label>Cooking Method <input id="meal-method" placeholder="e.g. [Griddle]" /></label>
+      
+      <label>Ingredients</label>
+      <div id="ingredient-rows">
+        </div>
+      <button class="secondary" id="add-ingredient-row-btn">+ Add Ingredient</button>
+      
+      <hr style="margin: 1.5em 0;">
+      <button class="save" id="save-meal-btn">Save Meal</button>
+      <input type="hidden" id="edit-meal-index">
+    </div>
+    <div id="meal-list" class="grid"></div>
+  </section>
+
+  <section id="planner" style="display:none;">
+    <div class="card">
+      <h2>Weekly Meal Plan</h2>
+      <div class="day-controls">
+        <button id="remove-day-btn" title="Remove Day">-</button>
+        <button id="add-day-btn" title="Add Day">+</button>
+      </div>
+      <div id="week-slots"></div>
+      <button class="export" id="generate-markdown-btn">Generate Markdown Shopping List</button>
+      <pre id="markdown-output"></pre>
+    </div>
+  </section>
+
+  <section id="settings" style="display:none;">
+    <div class="card">
+      <h2>Import / Export Data</h2>
+      <button class="export" id="export-btn">Export JSON</button>
+      <label>Import JSON
+        <input type="file" id="import-file" accept=".json" />
+      </label>
+      <hr style="margin: 1.5em 0;">
+      <h2>Reset Application</h2>
+      <button class="delete" id="reset-btn">Clear All Data (Reset)</button>
+    </div>
+  </section>
+</div>
+
+<script>
+// --- DATA & STATE ---
+
+const CATEGORIES = ['Boxes/aisles', 'Frozen', 'Chilled', 'Produce', 'Breads', 'Lunches/snack', 'Spices'];
+const DAY_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
+
+const defaultMeals = [
+  { 
+    title: "Taco Salad & Quesadillas", 
+    method: "[Griddle]", 
+    ingredients: [
+        { name: "Tortillas", category: "Breads", aisle: "3" },
+        { name: "Shredded Cheese", category: "Chilled", aisle: "" },
+        { name: "Lettuce", category: "Produce", aisle: "" },
+        { name: "Taco Meat (Ground Beef)", category: "Chilled", aisle: "" }
+    ]
+  },
+  { 
+    title: "Breakfast for Dinner", 
+    method: "[Griddle]", 
+    ingredients: [
+        { name: "Bacon", category: "Chilled", aisle: "" },
+        { name: "Eggs", category: "Chilled", aisle: "" },
+        { name: "Hashbrowns", category: "Frozen", aisle: "" },
+        { name: "Pancake Mix", category: "Boxes/aisles", aisle: "5" }
+    ]
+  },
+  { title: "LEFTOVERS", method: "", ingredients: [] }
+];
+
+let meals = JSON.parse(localStorage.getItem("meals") || "null") || defaultMeals;
+let weeklyPlan = JSON.parse(localStorage.getItem("weeklyPlan") || "{}");
+let dayCount = parseInt(localStorage.getItem("dayCount") || "5");
+
+// --- DATA PERSISTENCE ---
+
+function saveData() {
+  localStorage.setItem("meals", JSON.stringify(meals));
+  localStorage.setItem("weeklyPlan", JSON.stringify(weeklyPlan));
+  localStorage.setItem("dayCount", dayCount.toString());
+}
+
+// --- DOM ELEMENTS ---
+
+const addMealBtn = document.getElementById("save-meal-btn");
+const mealTitleEl = document.getElementById("meal-title");
+const mealMethodEl = document.getElementById("meal-method");
+const ingredientRowsEl = document.getElementById("ingredient-rows");
+const addIngredientRowBtn = document.getElementById("add-ingredient-row-btn");
+const editMealIndexEl = document.getElementById("edit-meal-index");
+const mealListEl = document.getElementById("meal-list");
+const weekSlotsEl = document.getElementById("week-slots");
+
+// --- DICTIONARY TAB ---
+
+function createIngredientRow(ingredient = {}) {
+    const div = document.createElement("div");
+    div.className = "ingredient-row";
+    
+    const name = ingredient.name || "";
+    const category = ingredient.category || CATEGORIES[0];
+    const aisle = ingredient.aisle || "";
+    
+    // 1. Name Input
+    const nameInput = document.createElement("input");
+    nameInput.type = "text";
+    nameInput.placeholder = "Ingredient Name";
+    nameInput.value = name;
+    
+    // 2. Category Select
+    const categorySelect = document.createElement("select");
+    categorySelect.innerHTML = CATEGORIES.map(c => `<option value="${c}" ${c === category ? 'selected' : ''}>${c}</option>`).join("");
+    
+    // 3. Aisle Input
+    const aisleInput = document.createElement("input");
+    aisleInput.type = "text";
+    aisleInput.placeholder = "Aisle #";
+    aisleInput.value = aisle;
+    
+    // 4. Delete Button
+    const deleteBtn = document.createElement("button");
+    deleteBtn.className = "delete";
+    deleteBtn.textContent = "X";
+    deleteBtn.onclick = () => div.remove();
+    
+    div.appendChild(nameInput);
+    div.appendChild(categorySelect);
+    div.appendChild(aisleInput);
+    div.appendChild(deleteBtn);
+    
+    ingredientRowsEl.appendChild(div);
+}
+
+addIngredientRowBtn.onclick = () => createIngredientRow();
+
+function clearMealForm() {
+    mealTitleEl.value = "";
+    mealMethodEl.value = "";
+    ingredientRowsEl.innerHTML = "";
+    editMealIndexEl.value = "";
+    addMealBtn.textContent = "Save Meal";
+}
+
+function loadMealForEdit(index) {
+    const meal = meals[index];
+    mealTitleEl.value = meal.title;
+    mealMethodEl.value = meal.method;
+    ingredientRowsEl.innerHTML = "";
+    meal.ingredients.forEach(createIngredientRow);
+    editMealIndexEl.value = index;
+    addMealBtn.textContent = "Update Meal";
+    window.scrollTo(0, 0); // Scroll to top to see form
+}
+
+addMealBtn.onclick = () => {
+    const title = mealTitleEl.value.trim();
+    const method = mealMethodEl.value.trim();
+    if (!title) return alert("Title is required");
+
+    const ingredients = [];
+    document.querySelectorAll("#ingredient-rows .ingredient-row").forEach(row => {
+        const name = row.children[0].value.trim();
+        const category = row.children[1].value;
+        const aisle = row.children[2].value.trim();
+        if (name) {
+            ingredients.push({ name, category, aisle });
+        }
+    });
+    
+    const meal = { title, method, ingredients };
+    const editIndex = editMealIndexEl.value;
+    
+    if (editIndex !== "") {
+        meals[editIndex] = meal; // Update existing
+    } else {
+        meals.push(meal); // Add new
+    }
+    
+    saveData();
+    renderMeals();
+    renderPlanner(); // Update planner dropdowns
+    clearMealForm();
+};
+
+function renderMeals() {
+  mealListEl.innerHTML = "";
+  meals.forEach((m, i) => {
+    const div = document.createElement("div");
+    div.className = "card";
+    const ingredientsList = m.ingredients.map(ing => `${ing.name} (${ing.category})`).join(", ") || "No ingredients";
+    div.innerHTML = `<strong>${m.method} ${m.title}</strong><br>
+    <small>${ingredientsList}</small><br>
+    <button class"secondary" onclick="loadMealForEdit(${i})">Edit</button>
+    <button class="delete" onclick="deleteMeal(${i})">Delete</button>`;
+    mealListEl.appendChild(div);
+  });
+}
+
+function deleteMeal(i) {
+  if (!confirm(`Are you sure you want to delete "${meals[i].title}"?`)) return;
+  meals.splice(i, 1);
+  saveData();
+  renderMeals();
+  renderPlanner();
+}
+
+// --- PLANNER TAB ---
+
+function renderPlanner() {
+  weekSlotsEl.innerHTML = "";
+  const letters = DAY_LETTERS.slice(0, dayCount);
+  
+  letters.forEach(l => {
+    const select = document.createElement("select");
+    select.innerHTML = `<option value="">-- Select Dinner --</option>` + 
+                       meals.map(m => `<option value="${m.title}">${m.title}</option>`).join("");
+    select.value = weeklyPlan[l] || "";
+    select.onchange = e => { weeklyPlan[l] = e.target.value; saveData(); };
+    
+    const label = document.createElement("label");
+    label.textContent = `${l}. `;
+    label.appendChild(select);
+    weekSlotsEl.appendChild(label);
+  });
+}
+
+document.getElementById("add-day-btn").onclick = () => {
+    if (dayCount < DAY_LETTERS.length) {
+        dayCount++;
+        saveData();
+        renderPlanner();
+    }
+};
+
+document.getElementById("remove-day-btn").onclick = () => {
+    if (dayCount > 1) {
+        // Clear data for the day being removed
+        const letterToRemove = DAY_LETTERS[dayCount - 1];
+        if (weeklyPlan[letterToRemove]) {
+            delete weeklyPlan[letterToRemove];
+        }
+        dayCount--;
+        saveData();
+        renderPlanner();
+    }
+};
+
+document.getElementById("generate-markdown-btn").onclick = () => {
+  const letters = DAY_LETTERS.slice(0, dayCount);
+  let md = "# __Potential meals__\n";
+  const shoppingList = {}; // { Produce: { "Apples": { meals: ['A'], aisle: 'p' } } }
+  
+  // 1. Build Meal List & Aggregated Shopping List
+  letters.forEach(l => {
+    const meal = meals.find(m => m.title === weeklyPlan[l]);
+    if (meal) {
+        md += `${l}. ${meal.method} ${meal.title}\n`;
+        
+        meal.ingredients.forEach(ing => {
+            if (!shoppingList[ing.category]) {
+                shoppingList[ing.category] = {};
+            }
+            if (!shoppingList[ing.category][ing.name]) {
+                shoppingList[ing.category][ing.name] = { meals: [], aisle: ing.aisle };
+            }
+            shoppingList[ing.category][ing.name].meals.push(l);
+        });
+    }
+  });
+  
+  md += "\n# __Grocery List__ [Related Meal Label/Tag]\n";
+  
+  // 2. Build Markdown Shopping List from Aggregated Data
+  CATEGORIES.forEach(category => {
+    if (shoppingList[category]) {
+        md += `## ${category}\n`;
+        Object.keys(shoppingList[category]).sort().forEach(itemName => {
+            const item = shoppingList[category][itemName];
+            const mealTags = item.meals.map(m => `[${m}]`).join('');
+            const aisleText = item.aisle ? ` (Aisle ${item.aisle})` : '';
+            
+            md += `* ||✅|| ${itemName}${aisleText} ${mealTags}\n`;
+        });
+    }
+  });
+
+  document.getElementById("markdown-output").textContent = md.trim();
+};
+
+// --- SETTINGS TAB ---
+
+document.getElementById("export-btn").onclick = () => {
+  const data = JSON.stringify({ meals, weeklyPlan, dayCount }, null, 2);
+  const blob = new Blob([data], { type: "application/json" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = "sous_list_backup.json";
+  a.click();
+};
+
+document.getElementById("import-file").onchange = e => {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = evt => {
+    try {
+        const data = JSON.parse(evt.target.result);
+        if (data.meals) meals = data.meals;
+        if (data.weeklyPlan) weeklyPlan = data.weeklyPlan;
+        if (data.dayCount) dayCount = parseInt(data.dayCount);
+        
+        saveData();
+        renderMeals();
+        renderPlanner();
+        alert("Data imported successfully!");
+    } catch (err) {
+        alert("Error importing file. It may be corrupt.\n" + err.message);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = null; // Clear file input
+};
+
+document.getElementById("reset-btn").onclick = () => {
+    if (confirm("Are you sure you want to clear ALL data? This will delete all your saved meals and plans and cannot be undone.")) {
+        localStorage.clear();
+        location.reload();
+    }
+};
+
+// --- NAVIGATION ---
+
+function switchTab(tab) {
+  document.querySelectorAll("nav button").forEach(b => b.classList.remove("active"));
+  document.querySelectorAll("section").forEach(s => s.style.display = "none");
+  document.getElementById(tab).style.display = "block";
+  document.getElementById("tab-" + tab).classList.add("active");
+}
+
+document.getElementById("tab-dictionary").onclick = () => switchTab("dictionary");
+document.getElementById("tab-planner").onclick = () => switchTab("planner");
+document.getElementById("tab-settings").onclick = () => switchTab("settings");
+
+// --- INITIALIZE APP ---
+
+renderMeals();
+renderPlanner();
+</script>
+</body>
+</html>
