@@ -74,7 +74,7 @@ textarea { resize: vertical; }
     <div class="card">
       <h2>Add / Edit Dinner</h2>
       <label>Title <input id="meal-title" placeholder="e.g. Taco Salad & Quesadillas" /></label>
-      <label>Cooking Method <input id="meal-method" placeholder="e.g. [Griddle]" /></label>
+      <label>Cooking Method <input id="meal-method" placeholder="e.g. Griddle, Oven, Crock pot, Blackstone" /></label>
       
       <label>Ingredients</label>
       <div id="ingredient-rows">
@@ -83,6 +83,7 @@ textarea { resize: vertical; }
       
       <hr style="margin: 1.5em 0;">
       <button class="save" id="save-meal-btn">Save Meal</button>
+      <button class="secondary" id="cancel-edit-btn" style="display:none;">Cancel</button>
       <input type="hidden" id="edit-meal-index">
     </div>
     <div id="meal-list" class="grid"></div>
@@ -124,7 +125,7 @@ const DAY_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 const defaultMeals = [
   { 
     title: "Taco Salad & Quesadillas", 
-    method: "[Griddle]", 
+    method: "Griddle", 
     ingredients: [
         { name: "Tortillas", category: "Breads", aisle: "3" },
         { name: "Shredded Cheese", category: "Chilled", aisle: "" },
@@ -134,13 +135,84 @@ const defaultMeals = [
   },
   { 
     title: "Breakfast for Dinner", 
-    method: "[Griddle]", 
+    method: "Blackstone", 
     ingredients: [
         { name: "Bacon", category: "Chilled", aisle: "" },
         { name: "Eggs", category: "Chilled", aisle: "" },
         { name: "Hashbrowns", category: "Frozen", aisle: "" },
-        { name: "Pancake Mix", category: "Boxes/aisles", aisle: "5" }
+        { name: "Pancake Mix", category: "Boxes/aisles", aisle: "5" },
+        { name: "Pumpkin Bread/Pancake mix", category: "Boxes/aisles", aisle: "" },
+        { name: "Sandwich bread", category: "Breads", aisle: "" }
     ]
+  },
+  { 
+    title: "Chicken Fajitas", 
+    method: "Black stone", 
+    ingredients: [
+        { name: "Mexican/Spanish Rice", category: "Boxes/aisles", aisle: "" },
+        { name: "Chicken for Fajitas", category: "Frozen", aisle: "" },
+        { name: "Chicken for Fajitas", category: "Chilled", aisle: "" },
+        { name: "Shredded Colby Jack", category: "Chilled", aisle: "" },
+        { name: "Green Peppers", category: "Produce", aisle: "" },
+        { name: "Red Pepper", category: "Produce", aisle: "" },
+        { name: "Onions", category: "Produce", aisle: "" },
+        { name: "Medium Tortillas", category: "Breads", aisle: "" },
+        { name: "Cumin", category: "Spices", aisle: "" }
+    ] 
+  },
+  { 
+    title: "Chili Cheese Dogs/Hot Dogs/Brats", 
+    method: "Crock pot/Blackstone", 
+    ingredients: [
+        { name: "Chili", category: "Boxes/aisles", aisle: "" },
+        { name: "Bags of Chips", category: "Boxes/aisles", aisle: "" },
+        { name: "Corn", category: "Frozen", aisle: "" },
+        { name: "Hot dogs / brats", category: "Chilled", aisle: "" },
+        { name: '"a Side" (e.g., Potato Salad / Coleslaw)', category: "Chilled", aisle: "" },
+        { name: "Hot Dog Buns", category: "Breads", aisle: "" }
+    ] 
+  },
+  { 
+    title: "Baked Teriyaki Chicken w/ Rice", 
+    method: "Oven", 
+    ingredients: [
+        { name: "Bigger Bag of Rice", category: "Boxes/aisles", aisle: "" },
+        { name: "Chicken for Teriyaki", category: "Frozen", aisle: "" },
+        { name: "Shredded Colby Jack", category: "Chilled", aisle: "" }
+    ] 
+  },
+  { 
+    title: "Grilled Cheese or Quesadillas", 
+    method: "Griddle", 
+    ingredients: [
+        { name: "Mexican/Spanish Rice", category: "Boxes/aisles", aisle: "" },
+        { name: "Shredded Colby Jack", category: "Chilled", aisle: "" },
+        { name: "Sliced Colby Jack", category: "Chilled", aisle: "" },
+        { name: "Queso Dip", category: "Chilled", aisle: "" },
+        { name: "Medium Tortillas", category: "Breads", aisle: "" },
+        { name: "Sandwich bread", category: "Breads", aisle: "" }
+    ] 
+  },
+  { 
+    title: "Chicken Alfredo", 
+    method: "Oven", 
+    ingredients: [
+        { name: "Corn", category: "Frozen", aisle: "" },
+        { name: "Texas Toast", category: "Frozen", aisle: "" }
+    ] 
+  },
+  { 
+    title: "Meatball Subs | Quick Spagetti + Meatballs", 
+    method: "Stove", 
+    ingredients: [
+        { name: "Bags of Chips", category: "Boxes/aisles", aisle: "" },
+        { name: "Spagetti /Red Sauce", category: "Boxes/aisles", aisle: "" },
+        { name: "Garlic Bread", category: "Frozen", aisle: "" },
+        { name: "Meatballs", category: "Frozen", aisle: "" },
+        { name: "Corn", category: "Frozen", aisle: "" },
+        { name: "Texas Toast", category: "Frozen", aisle: "" },
+        { name: '"a Side" (e.g., Potato Salad / Coleslaw)', category: "Chilled", aisle: "" }
+    ] 
   },
   { title: "LEFTOVERS", method: "", ingredients: [] }
 ];
@@ -167,6 +239,7 @@ const addIngredientRowBtn = document.getElementById("add-ingredient-row-btn");
 const editMealIndexEl = document.getElementById("edit-meal-index");
 const mealListEl = document.getElementById("meal-list");
 const weekSlotsEl = document.getElementById("week-slots");
+const cancelEditBtn = document.getElementById("cancel-edit-btn");
 
 // --- DICTIONARY TAB ---
 
@@ -210,12 +283,15 @@ function createIngredientRow(ingredient = {}) {
 
 addIngredientRowBtn.onclick = () => createIngredientRow();
 
+cancelEditBtn.onclick = () => clearMealForm();
+
 function clearMealForm() {
     mealTitleEl.value = "";
     mealMethodEl.value = "";
     ingredientRowsEl.innerHTML = "";
     editMealIndexEl.value = "";
     addMealBtn.textContent = "Save Meal";
+    cancelEditBtn.style.display = "none";
 }
 
 function loadMealForEdit(index) {
@@ -226,6 +302,7 @@ function loadMealForEdit(index) {
     meal.ingredients.forEach(createIngredientRow);
     editMealIndexEl.value = index;
     addMealBtn.textContent = "Update Meal";
+    cancelEditBtn.style.display = "inline-block";
     window.scrollTo(0, 0); // Scroll to top to see form
 }
 
@@ -265,7 +342,8 @@ function renderMeals() {
     const div = document.createElement("div");
     div.className = "card";
     const ingredientsList = m.ingredients.map(ing => `${ing.name} (${ing.category})`).join(", ") || "No ingredients";
-    div.innerHTML = `<strong>${m.method} ${m.title}</strong><br>
+    const methodDisplay = m.method ? `[${m.method.replace(/[\[\]]/g, '')}]` : '';
+    div.innerHTML = `<strong>${methodDisplay} ${m.title}</strong><br>
     <small>${ingredientsList}</small><br>
     <button class"secondary" onclick="loadMealForEdit(${i})">Edit</button>
     <button class="delete" onclick="deleteMeal(${i})">Delete</button>`;
@@ -331,7 +409,8 @@ document.getElementById("generate-markdown-btn").onclick = () => {
   letters.forEach(l => {
     const meal = meals.find(m => m.title === weeklyPlan[l]);
     if (meal) {
-        md += `${l}. ${meal.method} ${meal.title}\n`;
+        const methodDisplay = meal.method ? `[${meal.method}] ` : "";
+        md += `${l}. ${methodDisplay}${meal.title}\n`;
         
         meal.ingredients.forEach(ing => {
             if (!shoppingList[ing.category]) {
