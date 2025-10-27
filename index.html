@@ -173,11 +173,11 @@ textarea { resize: vertical; }
 </nav>
 
 <div class="container">
-  <section id="planner">
+  <section id="dictionary" style="display:none;">
     <div class="card">
       <h2>Add / Edit Dinner</h2>
       <label>Title <input id="meal-title" placeholder="e.g. Taco Salad & Quesadillas" /></label>
-      <label>Cooking Method <input id="meal-method" placeholder="e.g. Griddle, Oven, Crock pot, Blackstone" /></label>
+      <label>Cooking Method <input id="meal-method" placeholder="e.g. Griddle, Oven, Slow Cooker, Grill/Griddle" /></label>
       
       <label>Ingredients</label>
       <div id="ingredient-rows">
@@ -189,10 +189,27 @@ textarea { resize: vertical; }
       <button class="secondary" id="cancel-edit-btn" style="display:none;">Cancel</button>
       <input type="hidden" id="edit-meal-index">
     </div>
+    
+    <hr style="margin: 2em 0;">
+    
+    <div class="card">
+      <h2>My Meals</h2>
+      <label>Search/Filter Meals
+        <input type="text" id="meal-search" placeholder="Search by meal name, ingredient, or cooking method...">
+      </label>
+      <label>Sort By
+        <select id="meal-sort">
+          <option value="name">Name (A-Z)</option>
+          <option value="method">Cooking Method</option>
+          <option value="ingredients">Ingredient Count</option>
+        </select>
+      </label>
+    </div>
+    
     <div id="meal-list" class="grid"></div>
   </section>
 
-  <section id="dictionary" style="display:none;">
+  <section id="planner">
     <div class="card">
       <h2>Weekly Meal Plan</h2>
       <div class="day-controls">
@@ -203,25 +220,30 @@ textarea { resize: vertical; }
     </div>
 
     <div class="card">
-      <h2>Quick Add Item</h2>
-      <p>Add ingredients from your Dinner Dictionary</p>
-      <label>Select Ingredient
-        <div class="filterable-dropdown">
-          <input type="text" id="quick-add-ingredient-input" placeholder="Type to search ingredients..." autocomplete="off">
-          <div id="quick-add-dropdown-content" class="filterable-dropdown-content"></div>
-        </div>
-      </label>
-      <label>Notes (optional)
-        <input type="text" id="quick-add-notes" placeholder="e.g. 3 bags, need 2 lbs">
-      </label>
-      <label>Quantity (optional)
-        <input type="text" id="quick-add-qty" placeholder="e.g. 2, 3 bags, 1 lb">
-      </label>
-      <label style="display: flex; align-items: center; gap: 0.5em;">
-        <input type="checkbox" id="quick-add-have">
-        <span>Already Have This Item</span>
-      </label>
-      <button class="save" id="quick-add-btn">Add to Shopping List</button>
+      <div class="collapsible-header" id="quick-add-header">
+        <span class="collapsible-arrow">▼</span>
+        <h2 style="margin: 0;">Quick Add Item</h2>
+      </div>
+      <div id="quick-add-content" class="collapsible-content">
+        <p>Add ingredients from your Dinner Dictionary</p>
+        <label>Select Ingredient
+          <div class="filterable-dropdown">
+            <input type="text" id="quick-add-ingredient-input" placeholder="Type to search ingredients..." autocomplete="off">
+            <div id="quick-add-dropdown-content" class="filterable-dropdown-content"></div>
+          </div>
+        </label>
+        <label>Notes (optional)
+          <input type="text" id="quick-add-notes" placeholder="e.g. 3 bags, need 2 lbs">
+        </label>
+        <label>Quantity (optional)
+          <input type="text" id="quick-add-qty" placeholder="e.g. 2, 3 bags, 1 lb">
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5em;">
+          <input type="checkbox" id="quick-add-have">
+          <span>Already Have This Item</span>
+        </label>
+        <button class="save" id="quick-add-btn">Add to Shopping List</button>
+      </div>
     </div>
 
     <div class="card">
@@ -313,7 +335,7 @@ const defaultMeals = [
   },
   { 
     title: "Breakfast for Dinner", 
-    method: "Blackstone", 
+    method: "Grill/Griddle", 
     ingredients: [
         { name: "Bacon", category: "Chilled", aisle: "", qty: "" },
         { name: "Eggs", category: "Chilled", aisle: "", qty: "" },
@@ -340,7 +362,7 @@ const defaultMeals = [
   },
   { 
     title: "Chili Cheese Dogs/Hot Dogs/Brats", 
-    method: "Crock pot/Blackstone", 
+    method: "Slow Cooker/Grill/Griddle", 
     ingredients: [
         { name: "Chili", category: "Boxes/aisles", aisle: "", qty: "" },
         { name: "Bags of Chips", category: "Boxes/aisles", aisle: "", qty: "" },
@@ -468,6 +490,8 @@ const customItemHaveEl = document.getElementById("custom-item-have");
 const oneOffItemsListEl = document.getElementById("oneoff-items-list");
 const newCategoryInputEl = document.getElementById("new-category-input");
 const categoriesListEl = document.getElementById("categories-list");
+const mealSearchEl = document.getElementById("meal-search");
+const mealSortEl = document.getElementById("meal-sort");
 
 // Store all ingredients for Quick Add
 let allIngredients = [];
@@ -640,8 +664,45 @@ addMealBtn.onclick = () => {
 };
 
 function renderMeals() {
+  const searchTerm = mealSearchEl.value.toLowerCase();
+  const sortBy = mealSortEl.value;
+  
+  // Filter meals
+  let filteredMeals = meals.map((m, i) => ({meal: m, index: i})).filter(item => {
+    if (!searchTerm) return true;
+    
+    const m = item.meal;
+    const matchesName = m.title.toLowerCase().includes(searchTerm);
+    const matchesMethod = m.method.toLowerCase().includes(searchTerm);
+    const matchesIngredient = m.ingredients.some(ing => ing.name.toLowerCase().includes(searchTerm));
+    
+    return matchesName || matchesMethod || matchesIngredient;
+  });
+  
+  // Sort meals
+  filteredMeals.sort((a, b) => {
+    switch(sortBy) {
+      case 'name':
+        return a.meal.title.localeCompare(b.meal.title);
+      case 'method':
+        return a.meal.method.localeCompare(b.meal.method);
+      case 'ingredients':
+        return b.meal.ingredients.length - a.meal.ingredients.length;
+      default:
+        return 0;
+    }
+  });
+  
   mealListEl.innerHTML = "";
-  meals.forEach((m, i) => {
+  
+  if (filteredMeals.length === 0) {
+    mealListEl.innerHTML = '<div class="card"><p>No meals found matching your search.</p></div>';
+    return;
+  }
+  
+  filteredMeals.forEach(item => {
+    const m = item.meal;
+    const i = item.index;
     const div = document.createElement("div");
     div.className = "card";
     const ingredientsList = m.ingredients.map(ing => `${ing.name} (${ing.category})`).join(", ") || "No ingredients";
@@ -653,6 +714,10 @@ function renderMeals() {
     mealListEl.appendChild(div);
   });
 }
+
+// Add event listeners for search and sort
+mealSearchEl.addEventListener('input', renderMeals);
+mealSortEl.addEventListener('change', renderMeals);
 
 function deleteMeal(i) {
   if (!confirm(`Are you sure you want to delete "${meals[i].title}"?`)) return;
@@ -729,6 +794,20 @@ document.addEventListener('click', (e) => {
 document.getElementById('custom-item-header').addEventListener('click', () => {
   const content = document.getElementById('custom-item-content');
   const arrow = document.querySelector('#custom-item-header .collapsible-arrow');
+  
+  if (content.classList.contains('show')) {
+    content.classList.remove('show');
+    arrow.textContent = '▼';
+  } else {
+    content.classList.add('show');
+    arrow.textContent = '▲';
+  }
+});
+
+// Collapsible Quick Add Item section
+document.getElementById('quick-add-header').addEventListener('click', () => {
+  const content = document.getElementById('quick-add-content');
+  const arrow = document.querySelector('#quick-add-header .collapsible-arrow');
   
   if (content.classList.contains('show')) {
     content.classList.remove('show');
@@ -1295,8 +1374,8 @@ function switchTab(tab) {
   document.getElementById("tab-" + tab).classList.add("active");
 }
 
-document.getElementById("tab-dictionary").onclick = () => switchTab("dictionary");
 document.getElementById("tab-planner").onclick = () => switchTab("planner");
+document.getElementById("tab-dictionary").onclick = () => switchTab("dictionary");
 document.getElementById("tab-settings").onclick = () => switchTab("settings");
 
 // --- INITIALIZE APP ---
@@ -1308,6 +1387,9 @@ renderMeals();
 renderPlanner();
 renderOneOffItems();
 renderCategories();
+
+// Set initial tab to Weekly Planner
+switchTab("planner");
 </script>
 </body>
 </html>

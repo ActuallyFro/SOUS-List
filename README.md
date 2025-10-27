@@ -15,7 +15,7 @@ A web-based meal planning and grocery list generator that helps you organize you
   - Category (customizable)
   - Quantity
   - Aisle number
-- Specify cooking method (Griddle, Oven, Crock pot, Blackstone, etc.)
+- Specify cooking method (Griddle, Oven, Slow Cooker, Grill/Griddle, etc.)
 - Edit or delete meals anytime
 
 ### 📅 Weekly Planner

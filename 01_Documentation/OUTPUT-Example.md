@@ -1,9 +1,9 @@
 # __Potential meals__
 A. [Black stone] grill night: **chicken fajitas** 
-B. [Crock pot/Blackstone] **Chili cheese dogs**/hot dogs/brats (WE HAVE: Jumbo dogs)
+B. [Slow Cooker/Grill/Griddle] **Chili cheese dogs**/hot dogs/brats (WE HAVE: Jumbo dogs)
 C. [Oven] baked **teriyaki chicken w/ rice**(from frozen bag) (WE HAVE: bag oh chicken)
 D. [Griddle] **Grilled cheese** or quesadillas night
-E. [Blackstone] **breakfast for dinner** (WE HAVE: 1 Bacon Pack, and Hashbrowns)
+E. [Grill/Griddle] **breakfast for dinner** (WE HAVE: 1 Bacon Pack, and Hashbrowns)
 F. [Oven] frozen ~~lasagna~~ **chicken Alfredo** (Frozen Alfredo pack)
 G. [stove] hoagies -**meatball subs** | quick spagetti + meatballs (WE HAVE:  Frozen Hoagies)
 
