@@ -93,7 +93,7 @@ textarea { resize: vertical; }
 /* New styles for ingredient rows */
 .ingredient-row {
     display: grid;
-    grid-template-columns: 3fr 2fr 1fr 1fr;
+    grid-template-columns: 3fr 2fr 1fr 1fr 1fr;
     gap: 0.5em;
     align-items: center;
     margin-bottom: 0.5em;
@@ -173,6 +173,9 @@ textarea { resize: vertical; }
       <label>Notes (optional)
         <input type="text" id="quick-add-notes" placeholder="e.g. 3 bags, need 2 lbs">
       </label>
+      <label>Quantity (optional)
+        <input type="text" id="quick-add-qty" placeholder="e.g. 2, 3 bags, 1 lb">
+      </label>
       <label style="display: flex; align-items: center; gap: 0.5em;">
         <input type="checkbox" id="quick-add-have">
         <span>Already Have This Item</span>
@@ -195,6 +198,9 @@ textarea { resize: vertical; }
         </label>
         <label>Aisle (optional)
           <input type="text" id="custom-item-aisle" placeholder="e.g. 7">
+        </label>
+        <label>Quantity (optional)
+          <input type="text" id="custom-item-qty" placeholder="e.g. 2, 3 bags, 1 lb">
         </label>
         <label>Notes (optional)
           <input type="text" id="custom-item-notes" placeholder="e.g. need 2 packs">
@@ -258,91 +264,91 @@ const defaultMeals = [
     title: "Taco Salad & Quesadillas", 
     method: "Griddle", 
     ingredients: [
-        { name: "Tortillas", category: "Breads", aisle: "3" },
-        { name: "Shredded Cheese", category: "Chilled", aisle: "" },
-        { name: "Lettuce", category: "Produce", aisle: "" },
-        { name: "Taco Meat (Ground Beef)", category: "Chilled", aisle: "" }
+        { name: "Tortillas", category: "Breads", aisle: "3", qty: "" },
+        { name: "Shredded Cheese", category: "Chilled", aisle: "", qty: "" },
+        { name: "Lettuce", category: "Produce", aisle: "", qty: "" },
+        { name: "Taco Meat (Ground Beef)", category: "Chilled", aisle: "", qty: "" }
     ]
   },
   { 
     title: "Breakfast for Dinner", 
     method: "Blackstone", 
     ingredients: [
-        { name: "Bacon", category: "Chilled", aisle: "" },
-        { name: "Eggs", category: "Chilled", aisle: "" },
-        { name: "Hashbrowns", category: "Frozen", aisle: "" },
-        { name: "Pancake Mix", category: "Boxes/aisles", aisle: "5" },
-        { name: "Pumpkin Bread/Pancake mix", category: "Boxes/aisles", aisle: "" },
-        { name: "Sandwich bread", category: "Breads", aisle: "" }
+        { name: "Bacon", category: "Chilled", aisle: "", qty: "" },
+        { name: "Eggs", category: "Chilled", aisle: "", qty: "" },
+        { name: "Hashbrowns", category: "Frozen", aisle: "", qty: "" },
+        { name: "Pancake Mix", category: "Boxes/aisles", aisle: "5", qty: "" },
+        { name: "Pumpkin Bread/Pancake mix", category: "Boxes/aisles", aisle: "", qty: "" },
+        { name: "Sandwich bread", category: "Breads", aisle: "", qty: "" }
     ]
   },
   { 
     title: "Chicken Fajitas", 
     method: "Black stone", 
     ingredients: [
-        { name: "Mexican/Spanish Rice", category: "Boxes/aisles", aisle: "" },
-        { name: "Chicken for Fajitas", category: "Frozen", aisle: "" },
-        { name: "Chicken for Fajitas", category: "Chilled", aisle: "" },
-        { name: "Shredded Colby Jack", category: "Chilled", aisle: "" },
-        { name: "Green Peppers", category: "Produce", aisle: "" },
-        { name: "Red Pepper", category: "Produce", aisle: "" },
-        { name: "Onions", category: "Produce", aisle: "" },
-        { name: "Medium Tortillas", category: "Breads", aisle: "" },
-        { name: "Cumin", category: "Spices", aisle: "" }
+        { name: "Mexican/Spanish Rice", category: "Boxes/aisles", aisle: "", qty: "" },
+        { name: "Chicken for Fajitas", category: "Frozen", aisle: "", qty: "" },
+        { name: "Chicken for Fajitas", category: "Chilled", aisle: "", qty: "" },
+        { name: "Shredded Colby Jack", category: "Chilled", aisle: "", qty: "" },
+        { name: "Green Peppers", category: "Produce", aisle: "", qty: "" },
+        { name: "Red Pepper", category: "Produce", aisle: "", qty: "" },
+        { name: "Onions", category: "Produce", aisle: "", qty: "" },
+        { name: "Medium Tortillas", category: "Breads", aisle: "", qty: "" },
+        { name: "Cumin", category: "Spices", aisle: "", qty: "" }
     ] 
   },
   { 
     title: "Chili Cheese Dogs/Hot Dogs/Brats", 
     method: "Crock pot/Blackstone", 
     ingredients: [
-        { name: "Chili", category: "Boxes/aisles", aisle: "" },
-        { name: "Bags of Chips", category: "Boxes/aisles", aisle: "" },
-        { name: "Corn", category: "Frozen", aisle: "" },
-        { name: "Hot dogs / brats", category: "Chilled", aisle: "" },
-        { name: '"a Side" (e.g., Potato Salad / Coleslaw)', category: "Chilled", aisle: "" },
-        { name: "Hot Dog Buns", category: "Breads", aisle: "" }
+        { name: "Chili", category: "Boxes/aisles", aisle: "", qty: "" },
+        { name: "Bags of Chips", category: "Boxes/aisles", aisle: "", qty: "" },
+        { name: "Corn", category: "Frozen", aisle: "", qty: "" },
+        { name: "Hot dogs / brats", category: "Chilled", aisle: "", qty: "" },
+        { name: '"a Side" (e.g., Potato Salad / Coleslaw)', category: "Chilled", aisle: "", qty: "" },
+        { name: "Hot Dog Buns", category: "Breads", aisle: "", qty: "" }
     ] 
   },
   { 
     title: "Baked Teriyaki Chicken w/ Rice", 
     method: "Oven", 
     ingredients: [
-        { name: "Bigger Bag of Rice", category: "Boxes/aisles", aisle: "" },
-        { name: "Chicken for Teriyaki", category: "Frozen", aisle: "" },
-        { name: "Shredded Colby Jack", category: "Chilled", aisle: "" }
+        { name: "Bigger Bag of Rice", category: "Boxes/aisles", aisle: "", qty: "" },
+        { name: "Chicken for Teriyaki", category: "Frozen", aisle: "", qty: "" },
+        { name: "Shredded Colby Jack", category: "Chilled", aisle: "", qty: "" }
     ] 
   },
   { 
     title: "Grilled Cheese or Quesadillas", 
     method: "Griddle", 
     ingredients: [
-        { name: "Mexican/Spanish Rice", category: "Boxes/aisles", aisle: "" },
-        { name: "Shredded Colby Jack", category: "Chilled", aisle: "" },
-        { name: "Sliced Colby Jack", category: "Chilled", aisle: "" },
-        { name: "Queso Dip", category: "Chilled", aisle: "" },
-        { name: "Medium Tortillas", category: "Breads", aisle: "" },
-        { name: "Sandwich bread", category: "Breads", aisle: "" }
+        { name: "Mexican/Spanish Rice", category: "Boxes/aisles", aisle: "", qty: "" },
+        { name: "Shredded Colby Jack", category: "Chilled", aisle: "", qty: "" },
+        { name: "Sliced Colby Jack", category: "Chilled", aisle: "", qty: "" },
+        { name: "Queso Dip", category: "Chilled", aisle: "", qty: "" },
+        { name: "Medium Tortillas", category: "Breads", aisle: "", qty: "" },
+        { name: "Sandwich bread", category: "Breads", aisle: "", qty: "" }
     ] 
   },
   { 
     title: "Chicken Alfredo", 
     method: "Oven", 
     ingredients: [
-        { name: "Corn", category: "Frozen", aisle: "" },
-        { name: "Texas Toast", category: "Frozen", aisle: "" }
+        { name: "Corn", category: "Frozen", aisle: "", qty: "" },
+        { name: "Texas Toast", category: "Frozen", aisle: "", qty: "" }
     ] 
   },
   { 
     title: "Meatball Subs | Quick Spagetti + Meatballs", 
     method: "Stove", 
     ingredients: [
-        { name: "Bags of Chips", category: "Boxes/aisles", aisle: "" },
-        { name: "Spagetti /Red Sauce", category: "Boxes/aisles", aisle: "" },
-        { name: "Garlic Bread", category: "Frozen", aisle: "" },
-        { name: "Meatballs", category: "Frozen", aisle: "" },
-        { name: "Corn", category: "Frozen", aisle: "" },
-        { name: "Texas Toast", category: "Frozen", aisle: "" },
-        { name: '"a Side" (e.g., Potato Salad / Coleslaw)', category: "Chilled", aisle: "" }
+        { name: "Bags of Chips", category: "Boxes/aisles", aisle: "", qty: "" },
+        { name: "Spagetti /Red Sauce", category: "Boxes/aisles", aisle: "", qty: "" },
+        { name: "Garlic Bread", category: "Frozen", aisle: "", qty: "" },
+        { name: "Meatballs", category: "Frozen", aisle: "", qty: "" },
+        { name: "Corn", category: "Frozen", aisle: "", qty: "" },
+        { name: "Texas Toast", category: "Frozen", aisle: "", qty: "" },
+        { name: '"a Side" (e.g., Potato Salad / Coleslaw)', category: "Chilled", aisle: "", qty: "" }
     ] 
   },
   { title: "LEFTOVERS", method: "", ingredients: [] }
@@ -353,7 +359,7 @@ let weeklyPlan = JSON.parse(localStorage.getItem("weeklyPlan") || "{}");
 let dayCount = parseInt(localStorage.getItem("dayCount") || "5");
 let oneOffItems = JSON.parse(localStorage.getItem("oneOffItems") || "[]");
 
-// --- Data Migration & Initialization ---
+// Data Migration & Initialization ---
 // Converts old string-based weeklyPlan to new object-based one
 Object.keys(weeklyPlan).forEach(day => {
     if (weeklyPlan[day] && typeof weeklyPlan[day] === 'string') {
@@ -362,10 +368,26 @@ Object.keys(weeklyPlan).forEach(day => {
         weeklyPlan[day] = {
             title: mealTitle,
             ingredients: meal ? meal.ingredients.reduce((acc, ing) => {
-                acc[ing.name] = { have: false, notes: "" };
+                acc[ing.name] = { have: false, notes: "", qty: ing.qty || "" };
                 return acc;
             }, {}) : {}
         };
+    }
+});
+
+// Ensure all meal ingredients have qty field
+meals.forEach(meal => {
+    meal.ingredients.forEach(ing => {
+        if (!ing.hasOwnProperty('qty')) {
+            ing.qty = "";
+        }
+    });
+});
+
+// Ensure all one-off items have qty field
+oneOffItems.forEach(item => {
+    if (!item.hasOwnProperty('qty')) {
+        item.qty = "";
     }
 });
 
@@ -394,10 +416,12 @@ const cancelEditBtn = document.getElementById("cancel-edit-btn");
 const quickAddIngredientInputEl = document.getElementById("quick-add-ingredient-input");
 const quickAddDropdownContentEl = document.getElementById("quick-add-dropdown-content");
 const quickAddNotesEl = document.getElementById("quick-add-notes");
+const quickAddQtyEl = document.getElementById("quick-add-qty");
 const quickAddHaveEl = document.getElementById("quick-add-have");
 const customItemNameEl = document.getElementById("custom-item-name");
 const customItemCategoryEl = document.getElementById("custom-item-category");
 const customItemAisleEl = document.getElementById("custom-item-aisle");
+const customItemQtyEl = document.getElementById("custom-item-qty");
 const customItemNotesEl = document.getElementById("custom-item-notes");
 const customItemHaveEl = document.getElementById("custom-item-have");
 const oneOffItemsListEl = document.getElementById("oneoff-items-list");
@@ -416,6 +440,7 @@ function createIngredientRow(ingredient = {}) {
     const name = ingredient.name || "";
     const category = ingredient.category || CATEGORIES[0];
     const aisle = ingredient.aisle || "";
+    const qty = ingredient.qty || "";
     
     // 1. Name Input
     const nameInput = document.createElement("input");
@@ -427,13 +452,19 @@ function createIngredientRow(ingredient = {}) {
     const categorySelect = document.createElement("select");
     categorySelect.innerHTML = CATEGORIES.map(c => `<option value="${c}" ${c === category ? 'selected' : ''}>${c}</option>`).join("");
     
-    // 3. Aisle Input
+    // 3. Quantity Input
+    const qtyInput = document.createElement("input");
+    qtyInput.type = "text";
+    qtyInput.placeholder = "Qty";
+    qtyInput.value = qty;
+    
+    // 4. Aisle Input
     const aisleInput = document.createElement("input");
     aisleInput.type = "text";
     aisleInput.placeholder = "Aisle #";
     aisleInput.value = aisle;
     
-    // 4. Delete Button
+    // 5. Delete Button
     const deleteBtn = document.createElement("button");
     deleteBtn.className = "delete";
     deleteBtn.textContent = "X";
@@ -441,6 +472,7 @@ function createIngredientRow(ingredient = {}) {
     
     div.appendChild(nameInput);
     div.appendChild(categorySelect);
+    div.appendChild(qtyInput);
     div.appendChild(aisleInput);
     div.appendChild(deleteBtn);
     
@@ -481,9 +513,10 @@ addMealBtn.onclick = () => {
     document.querySelectorAll("#ingredient-rows .ingredient-row").forEach(row => {
         const name = row.children[0].value.trim();
         const category = row.children[1].value;
-        const aisle = row.children[2].value.trim();
+        const qty = row.children[2].value.trim();
+        const aisle = row.children[3].value.trim();
         if (name) {
-            ingredients.push({ name, category, aisle });
+            ingredients.push({ name, category, qty, aisle });
         }
     });
     
@@ -762,6 +795,7 @@ document.getElementById('quick-add-btn').onclick = () => {
     name: ingredientName,
     category: selectedCategory,
     aisle: selectedAisle || '',
+    qty: quickAddQtyEl.value.trim(),
     notes: quickAddNotesEl.value.trim(),
     have: quickAddHaveEl.checked
   };
@@ -773,6 +807,7 @@ document.getElementById('quick-add-btn').onclick = () => {
   quickAddIngredientInputEl.value = '';
   quickAddIngredientInputEl.removeAttribute('data-selected-category');
   quickAddIngredientInputEl.removeAttribute('data-selected-aisle');
+  quickAddQtyEl.value = '';
   quickAddNotesEl.value = '';
   quickAddHaveEl.checked = false;
 };
@@ -788,6 +823,7 @@ document.getElementById('custom-item-btn').onclick = () => {
     name: name,
     category: customItemCategoryEl.value,
     aisle: customItemAisleEl.value.trim(),
+    qty: customItemQtyEl.value.trim(),
     notes: customItemNotesEl.value.trim(),
     have: customItemHaveEl.checked
   };
@@ -798,6 +834,7 @@ document.getElementById('custom-item-btn').onclick = () => {
   
   customItemNameEl.value = '';
   customItemAisleEl.value = '';
+  customItemQtyEl.value = '';
   customItemNotesEl.value = '';
   customItemHaveEl.checked = false;
 };
@@ -862,26 +899,27 @@ function renderPlanner() {
         toggleBtn.style.display = 'inline-block';
 
         selectedMeal.ingredients.forEach(ing => {
-            const ingState = weeklyPlan[l].ingredients[ing.name] || { have: false, notes: "" };
+            const ingState = weeklyPlan[l].ingredients[ing.name] || { have: false, notes: "", qty: ing.qty || "" };
 
             const ingRow = document.createElement('div');
             ingRow.style.display = 'grid';
-            ingRow.style.gridTemplateColumns = 'auto 1fr auto';
+            ingRow.style.gridTemplateColumns = '2fr 1fr 2fr auto';
             ingRow.style.gap = '0.5em';
             ingRow.style.alignItems = 'center';
             ingRow.style.marginBottom = '0.5em';
 
-            const haveCheckbox = document.createElement('input');
-            haveCheckbox.type = 'checkbox';
-            haveCheckbox.checked = ingState.have;
-            haveCheckbox.onchange = (e) => {
-                weeklyPlan[l].ingredients[ing.name].have = e.target.checked;
-                saveData();
-            };
-
             const ingLabel = document.createElement('label');
             ingLabel.textContent = ing.name;
             ingLabel.style.fontWeight = 'normal';
+            
+            const qtyInput = document.createElement('input');
+            qtyInput.type = 'text';
+            qtyInput.placeholder = 'Qty...';
+            qtyInput.value = ingState.qty;
+            qtyInput.oninput = (e) => {
+                weeklyPlan[l].ingredients[ing.name].qty = e.target.value;
+                saveData();
+            };
             
             const notesInput = document.createElement('input');
             notesInput.type = 'text';
@@ -889,6 +927,14 @@ function renderPlanner() {
             notesInput.value = ingState.notes;
             notesInput.oninput = (e) => {
                 weeklyPlan[l].ingredients[ing.name].notes = e.target.value;
+                saveData();
+            };
+
+            const haveCheckbox = document.createElement('input');
+            haveCheckbox.type = 'checkbox';
+            haveCheckbox.checked = ingState.have;
+            haveCheckbox.onchange = (e) => {
+                weeklyPlan[l].ingredients[ing.name].have = e.target.checked;
                 saveData();
             };
             
@@ -901,6 +947,7 @@ function renderPlanner() {
             haveLabel.appendChild(document.createTextNode('Have'));
 
             ingRow.appendChild(ingLabel);
+            ingRow.appendChild(qtyInput);
             ingRow.appendChild(notesInput);
             ingRow.appendChild(haveLabel);
             ingredientsContainer.appendChild(ingRow);
@@ -914,7 +961,7 @@ function renderPlanner() {
         weeklyPlan[l] = {
             title: newMealTitle,
             ingredients: meal ? meal.ingredients.reduce((acc, ing) => {
-                acc[ing.name] = { have: false, notes: "" };
+                acc[ing.name] = { have: false, notes: "", qty: ing.qty || "" };
                 return acc;
             }, {}) : {}
         };
@@ -971,12 +1018,13 @@ document.getElementById("generate-markdown-btn").onclick = () => {
                     shoppingList[ing.category] = {};
                 }
                 if (!shoppingList[ing.category][ing.name]) {
-                    const ingState = dayPlan.ingredients[ing.name] || { have: false, notes: "" };
+                    const ingState = dayPlan.ingredients[ing.name] || { have: false, notes: "", qty: ing.qty || "" };
                     shoppingList[ing.category][ing.name] = { 
                         meals: [], 
                         aisle: ing.aisle,
                         have: ingState.have,
-                        notes: ingState.notes
+                        notes: ingState.notes,
+                        qty: ingState.qty
                     };
                 }
                 shoppingList[ing.category][ing.name].meals.push(l);
@@ -995,7 +1043,8 @@ document.getElementById("generate-markdown-btn").onclick = () => {
         meals: [],
         aisle: item.aisle,
         have: item.have,
-        notes: item.notes
+        notes: item.notes,
+        qty: item.qty || ""
       };
     } else {
       // If item already exists from meals, merge the data
@@ -1021,10 +1070,11 @@ document.getElementById("generate-markdown-btn").onclick = () => {
             const item = shoppingList[category][itemName];
             const mealTags = item.meals.length > 0 ? ' ' + item.meals.map(m => `[${m}]`).join('') : '';
             const aisleText = item.aisle ? ` (Aisle ${item.aisle})` : '';
+            const qtyText = item.qty ? ` ${item.qty}` : '';
             const notesText = item.notes ? ` - ${item.notes}` : '';
             const checkbox = item.have ? '✅' : '||✅||';
             
-            md += `* ${checkbox} ${itemName}${aisleText}${notesText}${mealTags}\n`;
+            md += `* ${checkbox} ${itemName}${qtyText}${aisleText}${notesText}${mealTags}\n`;
         });
     }
   });
