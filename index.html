@@ -97,7 +97,48 @@ textarea { resize: vertical; }
     gap: 0.5em;
     align-items: center;
     margin-bottom: 0.5em;
+    position: relative;
 }
+
+/* Ingredient name dropdown styles */
+.ingredient-name-dropdown {
+  position: relative;
+  width: 100%;
+}
+.ingredient-name-dropdown input[type="text"] {
+  width: 100%;
+  padding: 0.5em;
+  box-sizing: border-box;
+}
+.ingredient-name-dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: white;
+  width: 100%;
+  max-height: 200px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-top: none;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.ingredient-name-dropdown-content div {
+  padding: 8px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  font-size: 0.9em;
+}
+.ingredient-name-dropdown-content div:hover {
+  background-color: #f1f1f1;
+}
+.ingredient-name-dropdown-content div.no-results {
+  color: #999;
+  cursor: default;
+}
+.ingredient-name-dropdown-content div.no-results:hover {
+  background-color: white;
+}
+
 .ingredient-row label {
     margin: 0;
     font-size: 0.8em;
@@ -126,13 +167,13 @@ textarea { resize: vertical; }
 <body>
 <header><h1>🍽️ Smart Organized User Shopping List (SOUS List)</h1></header>
 <nav>
-  <button id="tab-dictionary" class="active">Dinner Dictionary</button>
-  <button id="tab-planner">Weekly Planner</button>
+  <button id="tab-planner" class="active">Weekly Planner</button>
+  <button id="tab-dictionary">Dinner Dictionary</button>
   <button id="tab-settings">Settings</button>
 </nav>
 
 <div class="container">
-  <section id="dictionary">
+  <section id="planner">
     <div class="card">
       <h2>Add / Edit Dinner</h2>
       <label>Title <input id="meal-title" placeholder="e.g. Taco Salad & Quesadillas" /></label>
@@ -151,7 +192,7 @@ textarea { resize: vertical; }
     <div id="meal-list" class="grid"></div>
   </section>
 
-  <section id="planner" style="display:none;">
+  <section id="dictionary" style="display:none;">
     <div class="card">
       <h2>Weekly Meal Plan</h2>
       <div class="day-controls">
@@ -430,8 +471,19 @@ const categoriesListEl = document.getElementById("categories-list");
 
 // Store all ingredients for Quick Add
 let allIngredients = [];
+let allIngredientNames = []; // For ingredient name autocomplete in dictionary
 
 // --- DICTIONARY TAB ---
+
+function updateAllIngredientNames() {
+  const uniqueNames = new Set();
+  meals.forEach(meal => {
+    meal.ingredients.forEach(ing => {
+      uniqueNames.add(ing.name);
+    });
+  });
+  allIngredientNames = Array.from(uniqueNames).sort((a, b) => a.localeCompare(b, undefined, {sensitivity: 'base'}));
+}
 
 function createIngredientRow(ingredient = {}) {
     const div = document.createElement("div");
@@ -442,11 +494,53 @@ function createIngredientRow(ingredient = {}) {
     const aisle = ingredient.aisle || "";
     const qty = ingredient.qty || "";
     
-    // 1. Name Input
+    // 1. Name Input with Dropdown
+    const nameDropdownDiv = document.createElement("div");
+    nameDropdownDiv.className = "ingredient-name-dropdown";
+    
     const nameInput = document.createElement("input");
     nameInput.type = "text";
     nameInput.placeholder = "Ingredient Name";
     nameInput.value = name;
+    
+    const nameDropdownContent = document.createElement("div");
+    nameDropdownContent.className = "ingredient-name-dropdown-content";
+    
+    const renderNameDropdown = (names) => {
+      nameDropdownContent.innerHTML = '';
+      if (names.length === 0) {
+        const noResults = document.createElement('div');
+        noResults.className = 'no-results';
+        noResults.textContent = 'No matches - will create new';
+        nameDropdownContent.appendChild(noResults);
+        return;
+      }
+      names.forEach(n => {
+        const nameDiv = document.createElement('div');
+        nameDiv.textContent = n;
+        nameDiv.onclick = () => {
+          nameInput.value = n;
+          nameDropdownContent.style.display = 'none';
+        };
+        nameDropdownContent.appendChild(nameDiv);
+      });
+    };
+    
+    nameInput.addEventListener('focus', () => {
+      updateAllIngredientNames();
+      renderNameDropdown(allIngredientNames);
+      nameDropdownContent.style.display = 'block';
+    });
+    
+    nameInput.addEventListener('input', (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      const filtered = allIngredientNames.filter(n => n.toLowerCase().includes(searchTerm));
+      renderNameDropdown(filtered);
+      nameDropdownContent.style.display = 'block';
+    });
+    
+    nameDropdownDiv.appendChild(nameInput);
+    nameDropdownDiv.appendChild(nameDropdownContent);
     
     // 2. Category Select
     const categorySelect = document.createElement("select");
@@ -470,7 +564,7 @@ function createIngredientRow(ingredient = {}) {
     deleteBtn.textContent = "X";
     deleteBtn.onclick = () => div.remove();
     
-    div.appendChild(nameInput);
+    div.appendChild(nameDropdownDiv);
     div.appendChild(categorySelect);
     div.appendChild(qtyInput);
     div.appendChild(aisleInput);
@@ -478,6 +572,16 @@ function createIngredientRow(ingredient = {}) {
     
     ingredientRowsEl.appendChild(div);
 }
+
+// Close ingredient name dropdowns when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.ingredient-name-dropdown') && !e.target.closest('.filterable-dropdown')) {
+    document.querySelectorAll('.ingredient-name-dropdown-content').forEach(dropdown => {
+      dropdown.style.display = 'none';
+    });
+    quickAddDropdownContentEl.style.display = 'none';
+  }
+});
 
 addIngredientRowBtn.onclick = () => createIngredientRow();
 
@@ -511,7 +615,7 @@ addMealBtn.onclick = () => {
 
     const ingredients = [];
     document.querySelectorAll("#ingredient-rows .ingredient-row").forEach(row => {
-        const name = row.children[0].value.trim();
+        const name = row.children[0].querySelector('input').value.trim();
         const category = row.children[1].value;
         const qty = row.children[2].value.trim();
         const aisle = row.children[3].value.trim();
@@ -1027,6 +1131,30 @@ document.getElementById("generate-markdown-btn").onclick = () => {
                         notes: ingState.notes,
                         qty: ingState.qty
                     };
+                } else {
+                    // Ingredient already exists - aggregate quantities and notes
+                    const ingState = dayPlan.ingredients[ing.name] || { have: false, notes: "", qty: ing.qty || "" };
+                    
+                    // Add quantity if present
+                    if (ingState.qty) {
+                        if (shoppingList[ing.category][ing.name].qty) {
+                            shoppingList[ing.category][ing.name].qty += ` + ${ingState.qty}`;
+                        } else {
+                            shoppingList[ing.category][ing.name].qty = ingState.qty;
+                        }
+                    }
+                    
+                    // Aggregate notes
+                    if (ingState.notes && !shoppingList[ing.category][ing.name].notes.includes(ingState.notes)) {
+                        shoppingList[ing.category][ing.name].notes = shoppingList[ing.category][ing.name].notes 
+                          ? `${shoppingList[ing.category][ing.name].notes}; ${ingState.notes}` 
+                          : ingState.notes;
+                    }
+                    
+                    // If marked as "have" in any meal, keep it as "have"
+                    if (ingState.have) {
+                        shoppingList[ing.category][ing.name].have = true;
+                    }
                 }
                 shoppingList[ing.category][ing.name].meals.push(l);
             });
@@ -1049,6 +1177,14 @@ document.getElementById("generate-markdown-btn").onclick = () => {
       };
     } else {
       // If item already exists from meals, merge the data
+      if (item.qty) {
+        if (shoppingList[item.category][item.name].qty) {
+          shoppingList[item.category][item.name].qty += ` + ${item.qty}`;
+        } else {
+          shoppingList[item.category][item.name].qty = item.qty;
+        }
+      }
+      
       if (item.notes && !shoppingList[item.category][item.name].notes.includes(item.notes)) {
         shoppingList[item.category][item.name].notes = shoppingList[item.category][item.name].notes 
           ? `${shoppingList[item.category][item.name].notes}; ${item.notes}` 
@@ -1071,8 +1207,8 @@ document.getElementById("generate-markdown-btn").onclick = () => {
             const item = shoppingList[category][itemName];
             const mealTags = item.meals.length > 0 ? ' ' + item.meals.map(m => `[${m}]`).join('') : '';
             const aisleText = item.aisle ? ` (Aisle ${item.aisle})` : '';
-            const qtyText = item.qty ? ` ${item.qty}` : '';
-            const notesText = item.notes ? ` - ${item.notes}` : '';
+            const qtyText = item.qty ? ` {${item.qty}}` : '';
+            const notesText = item.notes ? ` -- ${item.notes}` : '';
             const checkbox = item.have ? '✅' : '||✅||';
             
             md += `* ${checkbox} ${itemName}${qtyText}${aisleText}${notesText}${mealTags}\n`;
@@ -1165,6 +1301,7 @@ document.getElementById("tab-settings").onclick = () => switchTab("settings");
 
 // --- INITIALIZE APP ---
 
+updateAllIngredientNames();
 populateQuickAddDropdown();
 populateCustomCategoryDropdown();
 renderMeals();
