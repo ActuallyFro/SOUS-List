@@ -28,6 +28,68 @@ button.secondary { background: #777; color: white; }
 pre { background: #eee; padding: 1em; white-space: pre-wrap; word-wrap: break-word; border-radius: 5px; }
 textarea { resize: vertical; }
 
+/* Filterable dropdown styles */
+.filterable-dropdown {
+  position: relative;
+  width: 100%;
+}
+.filterable-dropdown input[type="text"] {
+  width: 100%;
+  padding: 0.5em;
+  box-sizing: border-box;
+  cursor: pointer;
+}
+.filterable-dropdown-content {
+  display: none;
+  position: absolute;
+  background-color: white;
+  width: 100%;
+  max-height: 300px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  border-top: none;
+  z-index: 1000;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+}
+.filterable-dropdown-content div {
+  padding: 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+}
+.filterable-dropdown-content div:hover {
+  background-color: #f1f1f1;
+}
+.filterable-dropdown-content div.no-results {
+  color: #999;
+  cursor: default;
+}
+.filterable-dropdown-content div.no-results:hover {
+  background-color: white;
+}
+
+/* Collapsible section styles */
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  cursor: pointer;
+  user-select: none;
+}
+.collapsible-header:hover {
+  opacity: 0.8;
+}
+.collapsible-arrow {
+  font-size: 1.2em;
+  font-weight: bold;
+}
+.collapsible-content {
+  display: none;
+  margin-top: 1em;
+}
+.collapsible-content.show {
+  display: block;
+}
+
 /* New styles for ingredient rows */
 .ingredient-row {
     display: grid;
@@ -97,12 +159,77 @@ textarea { resize: vertical; }
         <button id="add-day-btn" title="Add Day">+</button>
       </div>
       <div id="week-slots"></div>
+    </div>
+
+    <div class="card">
+      <h2>Quick Add Item</h2>
+      <p>Add ingredients from your Dinner Dictionary</p>
+      <label>Select Ingredient
+        <div class="filterable-dropdown">
+          <input type="text" id="quick-add-ingredient-input" placeholder="Type to search ingredients..." autocomplete="off">
+          <div id="quick-add-dropdown-content" class="filterable-dropdown-content"></div>
+        </div>
+      </label>
+      <label>Notes (optional)
+        <input type="text" id="quick-add-notes" placeholder="e.g. 3 bags, need 2 lbs">
+      </label>
+      <label style="display: flex; align-items: center; gap: 0.5em;">
+        <input type="checkbox" id="quick-add-have">
+        <span>Already Have This Item</span>
+      </label>
+      <button class="save" id="quick-add-btn">Add to Shopping List</button>
+    </div>
+
+    <div class="card">
+      <div class="collapsible-header" id="custom-item-header">
+        <span class="collapsible-arrow">▼</span>
+        <h2 style="margin: 0;">New Custom Item</h2>
+      </div>
+      <div id="custom-item-content" class="collapsible-content">
+        <p>Add items not in your Dinner Dictionary</p>
+        <label>Item Name
+          <input type="text" id="custom-item-name" placeholder="e.g. Paper Towels">
+        </label>
+        <label>Category
+          <select id="custom-item-category"></select>
+        </label>
+        <label>Aisle (optional)
+          <input type="text" id="custom-item-aisle" placeholder="e.g. 7">
+        </label>
+        <label>Notes (optional)
+          <input type="text" id="custom-item-notes" placeholder="e.g. need 2 packs">
+        </label>
+        <label style="display: flex; align-items: center; gap: 0.5em;">
+          <input type="checkbox" id="custom-item-have">
+          <span>Already Have This Item</span>
+        </label>
+        <button class="save" id="custom-item-btn">Add to Shopping List</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>One-Off Items</h2>
+      <div id="oneoff-items-list"></div>
+    </div>
+
+    <div class="card">
       <button class="export" id="generate-markdown-btn">Generate Markdown Shopping List</button>
       <pre id="markdown-output"></pre>
     </div>
   </section>
 
   <section id="settings" style="display:none;">
+    <div class="card">
+      <h2>Manage Categories</h2>
+      <p>Customize your grocery categories</p>
+      <div id="categories-list"></div>
+      <hr style="margin: 1em 0;">
+      <label>Add New Category
+        <input type="text" id="new-category-input" placeholder="e.g. Dairy, Meat, Bakery">
+      </label>
+      <button class="save" id="add-category-btn">Add Category</button>
+    </div>
+    
     <div class="card">
       <h2>Import / Export Data</h2>
       <label>Export Version (optional)
@@ -122,7 +249,8 @@ textarea { resize: vertical; }
 <script>
 // --- DATA & STATE ---
 
-const CATEGORIES = ['Boxes/aisles', 'Frozen', 'Chilled', 'Produce', 'Breads', 'Lunches/snack', 'Spices'];
+const DEFAULT_CATEGORIES = ['Boxes/aisles', 'Frozen', 'Chilled', 'Produce', 'Breads', 'Lunches/snack', 'Spices'];
+let CATEGORIES = JSON.parse(localStorage.getItem("categories") || "null") || DEFAULT_CATEGORIES;
 const DAY_LETTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZ".split("");
 
 const defaultMeals = [
@@ -223,6 +351,24 @@ const defaultMeals = [
 let meals = JSON.parse(localStorage.getItem("meals") || "null") || defaultMeals;
 let weeklyPlan = JSON.parse(localStorage.getItem("weeklyPlan") || "{}");
 let dayCount = parseInt(localStorage.getItem("dayCount") || "5");
+let oneOffItems = JSON.parse(localStorage.getItem("oneOffItems") || "[]");
+
+// --- Data Migration & Initialization ---
+// Converts old string-based weeklyPlan to new object-based one
+Object.keys(weeklyPlan).forEach(day => {
+    if (weeklyPlan[day] && typeof weeklyPlan[day] === 'string') {
+        const mealTitle = weeklyPlan[day];
+        const meal = meals.find(m => m.title === mealTitle);
+        weeklyPlan[day] = {
+            title: mealTitle,
+            ingredients: meal ? meal.ingredients.reduce((acc, ing) => {
+                acc[ing.name] = { have: false, notes: "" };
+                return acc;
+            }, {}) : {}
+        };
+    }
+});
+
 
 // --- DATA PERSISTENCE ---
 
@@ -230,6 +376,8 @@ function saveData() {
   localStorage.setItem("meals", JSON.stringify(meals));
   localStorage.setItem("weeklyPlan", JSON.stringify(weeklyPlan));
   localStorage.setItem("dayCount", dayCount.toString());
+  localStorage.setItem("oneOffItems", JSON.stringify(oneOffItems));
+  localStorage.setItem("categories", JSON.stringify(CATEGORIES));
 }
 
 // --- DOM ELEMENTS ---
@@ -243,6 +391,21 @@ const editMealIndexEl = document.getElementById("edit-meal-index");
 const mealListEl = document.getElementById("meal-list");
 const weekSlotsEl = document.getElementById("week-slots");
 const cancelEditBtn = document.getElementById("cancel-edit-btn");
+const quickAddIngredientInputEl = document.getElementById("quick-add-ingredient-input");
+const quickAddDropdownContentEl = document.getElementById("quick-add-dropdown-content");
+const quickAddNotesEl = document.getElementById("quick-add-notes");
+const quickAddHaveEl = document.getElementById("quick-add-have");
+const customItemNameEl = document.getElementById("custom-item-name");
+const customItemCategoryEl = document.getElementById("custom-item-category");
+const customItemAisleEl = document.getElementById("custom-item-aisle");
+const customItemNotesEl = document.getElementById("custom-item-notes");
+const customItemHaveEl = document.getElementById("custom-item-have");
+const oneOffItemsListEl = document.getElementById("oneoff-items-list");
+const newCategoryInputEl = document.getElementById("new-category-input");
+const categoriesListEl = document.getElementById("categories-list");
+
+// Store all ingredients for Quick Add
+let allIngredients = [];
 
 // --- DICTIONARY TAB ---
 
@@ -364,21 +527,407 @@ function deleteMeal(i) {
 
 // --- PLANNER TAB ---
 
+function populateQuickAddDropdown() {
+  const uniqueIngredients = new Map();
+  meals.forEach(meal => {
+    meal.ingredients.forEach(ing => {
+      if (!uniqueIngredients.has(ing.name)) {
+        uniqueIngredients.set(ing.name, ing);
+      }
+    });
+  });
+  
+  allIngredients = Array.from(uniqueIngredients.values()).sort((a, b) => a.name.localeCompare(b.name));
+  renderQuickAddDropdown(allIngredients);
+}
+
+function renderQuickAddDropdown(ingredients) {
+  quickAddDropdownContentEl.innerHTML = '';
+  
+  if (ingredients.length === 0) {
+    const noResults = document.createElement('div');
+    noResults.className = 'no-results';
+    noResults.textContent = 'No ingredients found';
+    quickAddDropdownContentEl.appendChild(noResults);
+    return;
+  }
+  
+  ingredients.forEach(ing => {
+    const div = document.createElement('div');
+    div.textContent = ing.name;
+    div.setAttribute('data-name', ing.name);
+    div.setAttribute('data-category', ing.category);
+    div.setAttribute('data-aisle', ing.aisle);
+    div.onclick = () => {
+      quickAddIngredientInputEl.value = ing.name;
+      quickAddIngredientInputEl.setAttribute('data-selected-category', ing.category);
+      quickAddIngredientInputEl.setAttribute('data-selected-aisle', ing.aisle);
+      quickAddDropdownContentEl.style.display = 'none';
+    };
+    quickAddDropdownContentEl.appendChild(div);
+  });
+}
+
+// Filterable dropdown event handlers
+quickAddIngredientInputEl.addEventListener('focus', () => {
+  quickAddDropdownContentEl.style.display = 'block';
+  renderQuickAddDropdown(allIngredients);
+});
+
+quickAddIngredientInputEl.addEventListener('input', (e) => {
+  const searchTerm = e.target.value.toLowerCase();
+  const filtered = allIngredients.filter(ing => ing.name.toLowerCase().includes(searchTerm));
+  renderQuickAddDropdown(filtered);
+  quickAddDropdownContentEl.style.display = 'block';
+});
+
+// Close dropdown when clicking outside
+document.addEventListener('click', (e) => {
+  if (!e.target.closest('.filterable-dropdown')) {
+    quickAddDropdownContentEl.style.display = 'none';
+  }
+});
+
+// Collapsible New Custom Item section
+document.getElementById('custom-item-header').addEventListener('click', () => {
+  const content = document.getElementById('custom-item-content');
+  const arrow = document.querySelector('#custom-item-header .collapsible-arrow');
+  
+  if (content.classList.contains('show')) {
+    content.classList.remove('show');
+    arrow.textContent = '▼';
+  } else {
+    content.classList.add('show');
+    arrow.textContent = '▲';
+  }
+});
+
+function populateCustomCategoryDropdown() {
+  customItemCategoryEl.innerHTML = CATEGORIES.map(c => `<option value="${c}">${c}</option>`).join('');
+}
+
+function renderCategories() {
+  categoriesListEl.innerHTML = '';
+  CATEGORIES.forEach((category, index) => {
+    const catDiv = document.createElement('div');
+    catDiv.style.display = 'flex';
+    catDiv.style.alignItems = 'center';
+    catDiv.style.gap = '0.5em';
+    catDiv.style.marginBottom = '0.5em';
+    catDiv.style.padding = '0.5em';
+    catDiv.style.background = '#f9f9f9';
+    catDiv.style.borderRadius = '5px';
+    
+    const catInput = document.createElement('input');
+    catInput.type = 'text';
+    catInput.value = category;
+    catInput.style.flex = '1';
+    catInput.onchange = (e) => {
+      const newName = e.target.value.trim();
+      if (newName && !CATEGORIES.includes(newName)) {
+        CATEGORIES[index] = newName;
+        saveData();
+        populateCustomCategoryDropdown();
+        // Update any existing ingredients/items with the old category name
+        meals.forEach(meal => {
+          meal.ingredients.forEach(ing => {
+            if (ing.category === category) ing.category = newName;
+          });
+        });
+        oneOffItems.forEach(item => {
+          if (item.category === category) item.category = newName;
+        });
+        saveData();
+      } else if (!newName) {
+        alert('Category name cannot be empty');
+        catInput.value = category;
+      } else if (CATEGORIES.includes(newName) && newName !== category) {
+        alert('Category already exists');
+        catInput.value = category;
+      }
+    };
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.style.margin = '0';
+    deleteBtn.onclick = () => {
+      if (confirm(`Delete category "${category}"? Items in this category will remain but you'll need to reassign them.`)) {
+        CATEGORIES.splice(index, 1);
+        saveData();
+        renderCategories();
+        populateCustomCategoryDropdown();
+      }
+    };
+    
+    catDiv.appendChild(catInput);
+    catDiv.appendChild(deleteBtn);
+    categoriesListEl.appendChild(catDiv);
+  });
+}
+
+document.getElementById('add-category-btn').onclick = () => {
+  const newCategory = newCategoryInputEl.value.trim();
+  if (!newCategory) {
+    alert('Please enter a category name');
+    return;
+  }
+  if (CATEGORIES.includes(newCategory)) {
+    alert('Category already exists');
+    return;
+  }
+  
+  CATEGORIES.push(newCategory);
+  saveData();
+  renderCategories();
+  populateCustomCategoryDropdown();
+  newCategoryInputEl.value = '';
+};
+
+function renderOneOffItems() {
+  oneOffItemsListEl.innerHTML = '';
+  if (oneOffItems.length === 0) {
+    oneOffItemsListEl.innerHTML = '<small>No one-off items added yet.</small>';
+    return;
+  }
+  
+  oneOffItems.forEach((item, index) => {
+    const itemDiv = document.createElement('div');
+    itemDiv.style.display = 'grid';
+    itemDiv.style.gridTemplateColumns = '1fr 2fr auto auto';
+    itemDiv.style.gap = '0.5em';
+    itemDiv.style.alignItems = 'center';
+    itemDiv.style.marginBottom = '0.5em';
+    itemDiv.style.padding = '0.5em';
+    itemDiv.style.background = '#f9f9f9';
+    itemDiv.style.borderRadius = '5px';
+    
+    const nameSpan = document.createElement('strong');
+    nameSpan.textContent = item.name;
+    
+    const notesSpan = document.createElement('small');
+    notesSpan.textContent = item.notes || 'No notes';
+    notesSpan.style.color = '#666';
+    
+    const haveCheckbox = document.createElement('input');
+    haveCheckbox.type = 'checkbox';
+    haveCheckbox.checked = item.have;
+    haveCheckbox.onchange = (e) => {
+      oneOffItems[index].have = e.target.checked;
+      saveData();
+    };
+    
+    const haveLabel = document.createElement('label');
+    haveLabel.style.display = 'flex';
+    haveLabel.style.alignItems = 'center';
+    haveLabel.style.gap = '0.3em';
+    haveLabel.style.fontWeight = 'normal';
+    haveLabel.appendChild(haveCheckbox);
+    haveLabel.appendChild(document.createTextNode('Have'));
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.style.margin = '0';
+    deleteBtn.onclick = () => {
+      oneOffItems.splice(index, 1);
+      saveData();
+      renderOneOffItems();
+    };
+    
+    itemDiv.appendChild(nameSpan);
+    itemDiv.appendChild(notesSpan);
+    itemDiv.appendChild(haveLabel);
+    itemDiv.appendChild(deleteBtn);
+    oneOffItemsListEl.appendChild(itemDiv);
+  });
+}
+
+document.getElementById('quick-add-btn').onclick = () => {
+  const ingredientName = quickAddIngredientInputEl.value.trim();
+  const selectedCategory = quickAddIngredientInputEl.getAttribute('data-selected-category');
+  const selectedAisle = quickAddIngredientInputEl.getAttribute('data-selected-aisle');
+  
+  if (!ingredientName) {
+    alert('Please select an ingredient');
+    return;
+  }
+  
+  if (!selectedCategory) {
+    alert('Please select a valid ingredient from the dropdown');
+    return;
+  }
+  
+  const item = {
+    name: ingredientName,
+    category: selectedCategory,
+    aisle: selectedAisle || '',
+    notes: quickAddNotesEl.value.trim(),
+    have: quickAddHaveEl.checked
+  };
+  
+  oneOffItems.push(item);
+  saveData();
+  renderOneOffItems();
+  
+  quickAddIngredientInputEl.value = '';
+  quickAddIngredientInputEl.removeAttribute('data-selected-category');
+  quickAddIngredientInputEl.removeAttribute('data-selected-aisle');
+  quickAddNotesEl.value = '';
+  quickAddHaveEl.checked = false;
+};
+
+document.getElementById('custom-item-btn').onclick = () => {
+  const name = customItemNameEl.value.trim();
+  if (!name) {
+    alert('Please enter an item name');
+    return;
+  }
+  
+  const item = {
+    name: name,
+    category: customItemCategoryEl.value,
+    aisle: customItemAisleEl.value.trim(),
+    notes: customItemNotesEl.value.trim(),
+    have: customItemHaveEl.checked
+  };
+  
+  oneOffItems.push(item);
+  saveData();
+  renderOneOffItems();
+  
+  customItemNameEl.value = '';
+  customItemAisleEl.value = '';
+  customItemNotesEl.value = '';
+  customItemHaveEl.checked = false;
+};
+
 function renderPlanner() {
   weekSlotsEl.innerHTML = "";
   const letters = DAY_LETTERS.slice(0, dayCount);
   
   letters.forEach(l => {
+    const dayData = weeklyPlan[l] || { title: "", ingredients: {} };
+
+    const dayContainer = document.createElement('div');
+    dayContainer.className = 'card';
+    dayContainer.style.marginBottom = '1em';
+
+    const dayHeader = document.createElement('div');
+    dayHeader.style.display = 'flex';
+    dayHeader.style.alignItems = 'center';
+    dayHeader.style.gap = '0.5em';
+
+    const label = document.createElement("label");
+    label.textContent = `${l}. `;
+    label.style.fontWeight = 'bold';
+    
     const select = document.createElement("select");
     select.innerHTML = `<option value="">-- Select Dinner --</option>` + 
                        meals.map(m => `<option value="${m.title}">${m.title}</option>`).join("");
-    select.value = weeklyPlan[l] || "";
-    select.onchange = e => { weeklyPlan[l] = e.target.value; saveData(); };
+    select.value = dayData.title;
     
-    const label = document.createElement("label");
-    label.textContent = `${l}. `;
-    label.appendChild(select);
-    weekSlotsEl.appendChild(label);
+    const ingredientsContainer = document.createElement('div');
+    ingredientsContainer.style.display = 'none';
+    ingredientsContainer.style.marginTop = '1em';
+    ingredientsContainer.style.paddingLeft = '1em';
+    ingredientsContainer.style.borderLeft = '3px solid #eee';
+
+    const toggleBtn = document.createElement('button');
+    toggleBtn.textContent = '+';
+    toggleBtn.style.padding = '0.2em 0.6em';
+    toggleBtn.style.fontSize = '1em';
+    toggleBtn.style.margin = '0';
+    toggleBtn.onclick = () => {
+        const isHidden = ingredientsContainer.style.display === 'none';
+        ingredientsContainer.style.display = isHidden ? 'block' : 'none';
+        toggleBtn.textContent = isHidden ? '-' : '+';
+    };
+
+    dayHeader.appendChild(label);
+    dayHeader.appendChild(select);
+    dayHeader.appendChild(toggleBtn);
+    
+    dayContainer.appendChild(dayHeader);
+    dayContainer.appendChild(ingredientsContainer);
+
+    const renderIngredients = () => {
+        ingredientsContainer.innerHTML = '';
+        const selectedMeal = meals.find(m => m.title === (weeklyPlan[l]?.title || ''));
+        if (!selectedMeal || selectedMeal.ingredients.length === 0) {
+            ingredientsContainer.innerHTML = '<small>No ingredients for this meal.</small>';
+            toggleBtn.style.display = 'none';
+            return;
+        }
+        toggleBtn.style.display = 'inline-block';
+
+        selectedMeal.ingredients.forEach(ing => {
+            const ingState = weeklyPlan[l].ingredients[ing.name] || { have: false, notes: "" };
+
+            const ingRow = document.createElement('div');
+            ingRow.style.display = 'grid';
+            ingRow.style.gridTemplateColumns = 'auto 1fr auto';
+            ingRow.style.gap = '0.5em';
+            ingRow.style.alignItems = 'center';
+            ingRow.style.marginBottom = '0.5em';
+
+            const haveCheckbox = document.createElement('input');
+            haveCheckbox.type = 'checkbox';
+            haveCheckbox.checked = ingState.have;
+            haveCheckbox.onchange = (e) => {
+                weeklyPlan[l].ingredients[ing.name].have = e.target.checked;
+                saveData();
+            };
+
+            const ingLabel = document.createElement('label');
+            ingLabel.textContent = ing.name;
+            ingLabel.style.fontWeight = 'normal';
+            
+            const notesInput = document.createElement('input');
+            notesInput.type = 'text';
+            notesInput.placeholder = 'Notes...';
+            notesInput.value = ingState.notes;
+            notesInput.oninput = (e) => {
+                weeklyPlan[l].ingredients[ing.name].notes = e.target.value;
+                saveData();
+            };
+            
+            const haveLabel = document.createElement('label');
+            haveLabel.style.display = 'flex';
+            haveLabel.style.alignItems = 'center';
+            haveLabel.style.gap = '0.5em';
+            haveLabel.style.fontWeight = 'normal';
+            haveLabel.appendChild(haveCheckbox);
+            haveLabel.appendChild(document.createTextNode('Have'));
+
+            ingRow.appendChild(ingLabel);
+            ingRow.appendChild(notesInput);
+            ingRow.appendChild(haveLabel);
+            ingredientsContainer.appendChild(ingRow);
+        });
+    };
+
+    select.onchange = e => {
+        const newMealTitle = e.target.value;
+        const meal = meals.find(m => m.title === newMealTitle);
+        
+        weeklyPlan[l] = {
+            title: newMealTitle,
+            ingredients: meal ? meal.ingredients.reduce((acc, ing) => {
+                acc[ing.name] = { have: false, notes: "" };
+                return acc;
+            }, {}) : {}
+        };
+        saveData();
+        renderIngredients();
+    };
+    
+    weekSlotsEl.appendChild(dayContainer);
+    if (dayData.title) {
+        renderIngredients();
+    } else {
+        toggleBtn.style.display = 'none';
+    }
   });
 }
 
@@ -410,35 +959,72 @@ document.getElementById("generate-markdown-btn").onclick = () => {
   
   // 1. Build Meal List & Aggregated Shopping List
   letters.forEach(l => {
-    const meal = meals.find(m => m.title === weeklyPlan[l]);
-    if (meal) {
-        const methodDisplay = meal.method ? `[${meal.method}] ` : "";
-        md += `${l}. ${methodDisplay}${meal.title}\n`;
-        
-        meal.ingredients.forEach(ing => {
-            if (!shoppingList[ing.category]) {
-                shoppingList[ing.category] = {};
-            }
-            if (!shoppingList[ing.category][ing.name]) {
-                shoppingList[ing.category][ing.name] = { meals: [], aisle: ing.aisle };
-            }
-            shoppingList[ing.category][ing.name].meals.push(l);
-        });
+    const dayPlan = weeklyPlan[l];
+    if (dayPlan && dayPlan.title) {
+        const meal = meals.find(m => m.title === dayPlan.title);
+        if (meal) {
+            const methodDisplay = meal.method ? `[${meal.method.replace(/[\[\]]/g, '')}] ` : "";
+            md += `${l}. ${methodDisplay}${meal.title}\n`;
+            
+            meal.ingredients.forEach(ing => {
+                if (!shoppingList[ing.category]) {
+                    shoppingList[ing.category] = {};
+                }
+                if (!shoppingList[ing.category][ing.name]) {
+                    const ingState = dayPlan.ingredients[ing.name] || { have: false, notes: "" };
+                    shoppingList[ing.category][ing.name] = { 
+                        meals: [], 
+                        aisle: ing.aisle,
+                        have: ingState.have,
+                        notes: ingState.notes
+                    };
+                }
+                shoppingList[ing.category][ing.name].meals.push(l);
+            });
+        }
+    }
+  });
+  
+  // 2. Add One-Off Items to Shopping List
+  oneOffItems.forEach(item => {
+    if (!shoppingList[item.category]) {
+      shoppingList[item.category] = {};
+    }
+    if (!shoppingList[item.category][item.name]) {
+      shoppingList[item.category][item.name] = {
+        meals: [],
+        aisle: item.aisle,
+        have: item.have,
+        notes: item.notes
+      };
+    } else {
+      // If item already exists from meals, merge the data
+      if (item.notes && !shoppingList[item.category][item.name].notes.includes(item.notes)) {
+        shoppingList[item.category][item.name].notes = shoppingList[item.category][item.name].notes 
+          ? `${shoppingList[item.category][item.name].notes}; ${item.notes}` 
+          : item.notes;
+      }
+      // If marked as "have" in one-off, override to "have"
+      if (item.have) {
+        shoppingList[item.category][item.name].have = true;
+      }
     }
   });
   
   md += "\n# __Grocery List__ [Related Meal Label/Tag]\n";
   
-  // 2. Build Markdown Shopping List from Aggregated Data
+  // 3. Build Markdown Shopping List from Aggregated Data
   CATEGORIES.forEach(category => {
     if (shoppingList[category]) {
         md += `## ${category}\n`;
         Object.keys(shoppingList[category]).sort().forEach(itemName => {
             const item = shoppingList[category][itemName];
-            const mealTags = item.meals.map(m => `[${m}]`).join('');
+            const mealTags = item.meals.length > 0 ? ' ' + item.meals.map(m => `[${m}]`).join('') : '';
             const aisleText = item.aisle ? ` (Aisle ${item.aisle})` : '';
+            const notesText = item.notes ? ` - ${item.notes}` : '';
+            const checkbox = item.have ? '✅' : '||✅||';
             
-            md += `* ||✅|| ${itemName}${aisleText} ${mealTags}\n`;
+            md += `* ${checkbox} ${itemName}${aisleText}${notesText}${mealTags}\n`;
         });
     }
   });
@@ -449,7 +1035,7 @@ document.getElementById("generate-markdown-btn").onclick = () => {
 // --- SETTINGS TAB ---
 
 document.getElementById("export-btn").onclick = () => {
-  const data = JSON.stringify({ meals, weeklyPlan, dayCount }, null, 2);
+  const data = JSON.stringify({ meals, weeklyPlan, dayCount, oneOffItems, categories: CATEGORIES }, null, 2);
   const blob = new Blob([data], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -488,10 +1074,15 @@ document.getElementById("import-file").onchange = e => {
         if (data.meals) meals = data.meals;
         if (data.weeklyPlan) weeklyPlan = data.weeklyPlan;
         if (data.dayCount) dayCount = parseInt(data.dayCount);
+        if (data.oneOffItems) oneOffItems = data.oneOffItems;
+        if (data.categories) CATEGORIES = data.categories;
         
         saveData();
         renderMeals();
         renderPlanner();
+        renderOneOffItems();
+        renderCategories();
+        populateCustomCategoryDropdown();
         alert("Data imported successfully!");
     } catch (err) {
         alert("Error importing file. It may be corrupt.\n" + err.message);
@@ -523,8 +1114,12 @@ document.getElementById("tab-settings").onclick = () => switchTab("settings");
 
 // --- INITIALIZE APP ---
 
+populateQuickAddDropdown();
+populateCustomCategoryDropdown();
 renderMeals();
 renderPlanner();
+renderOneOffItems();
+renderCategories();
 </script>
 </body>
 </html>
