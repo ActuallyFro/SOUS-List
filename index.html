@@ -5,13 +5,29 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <title>SOUS List</title>
 <style>
-body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #f4f4f8; }
+body { font-family: system-ui, sans-serif; margin: 0; padding: 0; background: #f4f4f8; transition: background 0.3s, color 0.3s; }
 header { background: #222; color: #fff; padding: 1em; text-align: center; }
 nav { display: flex; justify-content: center; background: #333; }
 nav button { background: none; border: none; color: #fff; padding: 1em; cursor: pointer; }
 nav button.active { background: #555; }
 .container { padding: 1em; max-width: 900px; margin: auto; }
-.card { background: white; padding: 1em; border-radius: 8px; margin-bottom: 1em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.card { background: white; padding: 1em; border-radius: 8px; margin-bottom: 1em; box-shadow: 0 1px 3px rgba(0,0,0,0.1); transition: background 0.3s, color 0.3s; }
+
+/* Dark mode styles */
+body.dark-mode { background: #1a1a1a; color: #e0e0e0; }
+body.dark-mode header { background: #111; }
+body.dark-mode nav { background: #222; }
+body.dark-mode nav button.active { background: #444; }
+body.dark-mode .card { background: #2a2a2a; color: #e0e0e0; box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+body.dark-mode input, body.dark-mode select, body.dark-mode textarea { background: #333; color: #e0e0e0; border: 1px solid #444; }
+body.dark-mode pre { background: #333; color: #e0e0e0; }
+body.dark-mode .filterable-dropdown-content { background-color: #333; border-color: #444; }
+body.dark-mode .filterable-dropdown-content div { border-bottom-color: #444; }
+body.dark-mode .filterable-dropdown-content div:hover { background-color: #444; }
+body.dark-mode .ingredient-name-dropdown-content { background-color: #333; border-color: #444; }
+body.dark-mode .ingredient-name-dropdown-content div { border-bottom-color: #444; }
+body.dark-mode .ingredient-name-dropdown-content div:hover { background-color: #444; }
+
 label { display: block; margin-top: 0.5em; font-weight: bold; }
 input, select, textarea { 
     width: 100%; 
@@ -24,9 +40,16 @@ button.save { background: #4caf50; color: white; }
 button.delete { background: #f44336; color: white; }
 button.export { background: #2196f3; color: white; }
 button.secondary { background: #777; color: white; }
+button.blue { background: #2196f3; color: white; }
+button.purple { background: #9c27b0; color: white; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 1em; }
 pre { background: #eee; padding: 1em; white-space: pre-wrap; word-wrap: break-word; border-radius: 5px; }
 textarea { resize: vertical; }
+
+/* Green checkboxes when checked */
+input[type="checkbox"]:checked {
+  accent-color: #4caf50;
+}
 
 /* Filterable dropdown styles */
 .filterable-dropdown {
@@ -289,6 +312,20 @@ textarea { resize: vertical; }
 
   <section id="settings" style="display:none;">
     <div class="card">
+      <h2>About SOUS List</h2>
+      <p><strong>Version:</strong> v1.1</p>
+      <p><strong>Release Date:</strong> October 26, 2025</p>
+    </div>
+
+    <div class="card">
+      <h2>Appearance</h2>
+      <label style="display: flex; align-items: center; gap: 0.5em;">
+        <input type="checkbox" id="dark-mode-toggle">
+        <span>Enable Dark Mode</span>
+      </label>
+    </div>
+
+    <div class="card">
       <h2>Manage Categories</h2>
       <p>Customize your grocery categories</p>
       <div id="categories-list"></div>
@@ -302,7 +339,7 @@ textarea { resize: vertical; }
     <div class="card">
       <h2>Import / Export Data</h2>
       <label>Export Version (optional)
-        <input type="text" id="export-version" placeholder="e.g. v1.0, family-gettogether">
+        <input type="text" id="export-version" placeholder="e.g. v1, family-mealplan, Holidays">
       </label>
       <button class="export" id="export-btn">Export JSON</button>
       <label>Import JSON
@@ -709,7 +746,7 @@ function renderMeals() {
     const methodDisplay = m.method ? `[${m.method.replace(/[\[\]]/g, '')}]` : '';
     div.innerHTML = `<strong>${methodDisplay} ${m.title}</strong><br>
     <small>${ingredientsList}</small><br>
-    <button class"secondary" onclick="loadMealForEdit(${i})">Edit</button>
+    <button class="blue" onclick="loadMealForEdit(${i})">Edit</button>
     <button class="delete" onclick="deleteMeal(${i})">Delete</button>`;
     mealListEl.appendChild(div);
   });
@@ -1055,6 +1092,7 @@ function renderPlanner() {
 
     const toggleBtn = document.createElement('button');
     toggleBtn.textContent = '+';
+    toggleBtn.className = 'blue';
     toggleBtn.style.padding = '0.2em 0.6em';
     toggleBtn.style.fontSize = '1em';
     toggleBtn.style.margin = '0';
@@ -1062,6 +1100,7 @@ function renderPlanner() {
         const isHidden = ingredientsContainer.style.display === 'none';
         ingredientsContainer.style.display = isHidden ? 'block' : 'none';
         toggleBtn.textContent = isHidden ? '-' : '+';
+        toggleBtn.className = isHidden ? 'purple' : 'blue';
     };
 
     dayHeader.appendChild(label);
@@ -1364,6 +1403,28 @@ document.getElementById("reset-btn").onclick = () => {
         location.reload();
     }
 };
+
+// --- DARK MODE ---
+
+const darkModeToggle = document.getElementById("dark-mode-toggle");
+const isDarkMode = localStorage.getItem("darkMode") === "true";
+
+// Apply saved dark mode preference
+if (isDarkMode) {
+  document.body.classList.add("dark-mode");
+  darkModeToggle.checked = true;
+}
+
+// Toggle dark mode
+darkModeToggle.addEventListener("change", () => {
+  if (darkModeToggle.checked) {
+    document.body.classList.add("dark-mode");
+    localStorage.setItem("darkMode", "true");
+  } else {
+    document.body.classList.remove("dark-mode");
+    localStorage.setItem("darkMode", "false");
+  }
+});
 
 // --- NAVIGATION ---
 
