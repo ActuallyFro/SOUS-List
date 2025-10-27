@@ -1002,6 +1002,7 @@ document.getElementById("remove-day-btn").onclick = () => {
 document.getElementById("generate-markdown-btn").onclick = () => {
   const letters = DAY_LETTERS.slice(0, dayCount);
   let md = "# __Potential meals__\n";
+  md += "_Generated from: [SOUS List App](https://actuallyfro.github.io/SOUS-List/)_\n\n";
   const shoppingList = {}; // { Produce: { "Apples": { meals: ['A'], aisle: 'p' } } }
   
   // 1. Build Meal List & Aggregated Shopping List
