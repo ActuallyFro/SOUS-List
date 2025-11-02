@@ -407,7 +407,7 @@ body.dark-mode .draggable-item:hover {
     <div class="card">
       <h2>About SOUS List</h2>
       <p><strong>Simplified Order Utility for a Shopping List</strong></p>
-      <p><strong>Version:</strong> v1.2.2</p>
+      <p><strong>Version:</strong> v1.3</p>
       <p><strong>Release Date:</strong> November 2, 2025</p>
     </div>
 
@@ -465,7 +465,8 @@ body.dark-mode .draggable-item:hover {
       <label>Sort By
         <select id="items-sort">
           <option value="name">Name (A-Z)</option>
-          <option value="usage">Usage Count (High to Low)</option>
+          <option value="usage-high">Usage Count (High to Low)</option>
+          <option value="usage-low">Usage Count (Low to High)</option>
         </select>
       </label>
       <div id="items-list" style="margin-top: 1em;"></div>
@@ -901,12 +902,26 @@ function deleteMeal(i) {
 
 function populateQuickAddDropdown() {
   const uniqueIngredients = new Map();
+  
+  // Add ingredients from meals
   meals.forEach(meal => {
     meal.ingredients.forEach(ing => {
       if (!uniqueIngredients.has(ing.name)) {
         uniqueIngredients.set(ing.name, ing);
       }
     });
+  });
+  
+  // Add one-off items to the dropdown
+  oneOffItems.forEach(item => {
+    if (!uniqueIngredients.has(item.name)) {
+      uniqueIngredients.set(item.name, {
+        name: item.name,
+        category: item.category,
+        aisle: item.aisle,
+        qty: item.qty || ""
+      });
+    }
   });
   
   allIngredients = Array.from(uniqueIngredients.values()).sort((a, b) => a.name.localeCompare(b.name));
@@ -930,7 +945,9 @@ function renderQuickAddDropdown(ingredients) {
     div.setAttribute('data-name', ing.name);
     div.setAttribute('data-category', ing.category);
     div.setAttribute('data-aisle', ing.aisle);
-    div.onclick = () => {
+    div.onmousedown = (e) => {
+      // Use mousedown instead of click to fire before blur/focus events
+      e.preventDefault(); // Prevent input from losing focus
       quickAddIngredientInputEl.value = ing.name;
       quickAddIngredientInputEl.setAttribute('data-selected-category', ing.category);
       quickAddIngredientInputEl.setAttribute('data-selected-aisle', ing.aisle);
@@ -1187,6 +1204,24 @@ function getAllItems() {
     });
   });
   
+  // Include one-off items (they show as used in 0 meals but are still managed items)
+  oneOffItems.forEach(item => {
+    const key = item.name.toLowerCase();
+    if (itemsMap.has(key)) {
+      // Item exists from meals, keep the meal count
+      itemsMap.get(key).count += 0; // No additional count, already tracked
+    } else {
+      // One-off item not in any meal
+      itemsMap.set(key, {
+        name: item.name,
+        count: 0, // Not used in any meal
+        category: item.category,
+        aisle: item.aisle,
+        qty: item.qty || ""
+      });
+    }
+  });
+  
   return Array.from(itemsMap.values());
 }
 
@@ -1204,8 +1239,10 @@ function renderItems() {
   filteredItems.sort((a, b) => {
     if (sortBy === 'name') {
       return a.name.localeCompare(b.name, undefined, {sensitivity: 'base'});
-    } else if (sortBy === 'usage') {
-      return b.count - a.count;
+    } else if (sortBy === 'usage-high') {
+      return b.count - a.count; // High to Low
+    } else if (sortBy === 'usage-low') {
+      return a.count - b.count; // Low to High
     }
     return 0;
   });
@@ -1376,7 +1413,9 @@ function renderOneOffItems() {
     deleteBtn.onclick = () => {
       oneOffItems.splice(index, 1);
       saveData();
+      populateQuickAddDropdown(); // Refresh dropdown
       renderOneOffItems();
+      renderItems(); // Update Manage Items list
     };
     
     itemDiv.appendChild(nameSpan);
@@ -1415,7 +1454,9 @@ document.getElementById('quick-add-btn').onclick = () => {
   
   oneOffItems.push(item);
   saveData();
+  populateQuickAddDropdown(); // Refresh dropdown with new item
   renderOneOffItems();
+  renderItems(); // Update Manage Items list
   
   quickAddIngredientInputEl.value = '';
   quickAddIngredientInputEl.removeAttribute('data-selected-category');
@@ -1443,7 +1484,9 @@ document.getElementById('custom-item-btn').onclick = () => {
   
   oneOffItems.push(item);
   saveData();
+  populateQuickAddDropdown(); // Refresh dropdown with new item
   renderOneOffItems();
+  renderItems(); // Update Manage Items list
   
   customItemNameEl.value = '';
   customItemAisleEl.value = '';
@@ -1843,6 +1886,8 @@ document.getElementById("import-file").onchange = e => {
         if (data.categories) CATEGORIES = data.categories;
         
         saveData();
+        updateAllIngredientNames();
+        populateQuickAddDropdown();
         renderMeals();
         renderPlanner();
         renderOneOffItems();
