@@ -98,6 +98,15 @@ body.dark-mode .toggle-switch input:checked + .toggle-slider {
   background-color: #4caf50;
 }
 
+/* Item box styles */
+.item-box {
+  background: #f9f9f9;
+  border-radius: 5px;
+}
+body.dark-mode .item-box {
+  background: #333;
+}
+
 /* Drag and drop styles */
 .draggable-item {
   display: flex;
@@ -398,7 +407,7 @@ body.dark-mode .draggable-item:hover {
     <div class="card">
       <h2>About SOUS List</h2>
       <p><strong>Simplified Order Utility for a Shopping List</strong></p>
-      <p><strong>Version:</strong> v1.2</p>
+      <p><strong>Version:</strong> v1.2.1</p>
       <p><strong>Release Date:</strong> November 2, 2025</p>
     </div>
 
@@ -1156,13 +1165,12 @@ function renderItems() {
   
   filteredItems.forEach(item => {
     const itemDiv = document.createElement('div');
+    itemDiv.className = 'item-box';
     itemDiv.style.display = 'flex';
     itemDiv.style.alignItems = 'center';
     itemDiv.style.gap = '0.5em';
     itemDiv.style.marginBottom = '0.5em';
     itemDiv.style.padding = '0.5em';
-    itemDiv.style.background = '#f9f9f9';
-    itemDiv.style.borderRadius = '5px';
     
     const itemInfo = document.createElement('div');
     itemInfo.style.flex = '1';
@@ -1268,14 +1276,13 @@ function renderOneOffItems() {
   
   oneOffItems.forEach((item, index) => {
     const itemDiv = document.createElement('div');
+    itemDiv.className = 'item-box';
     itemDiv.style.display = 'grid';
     itemDiv.style.gridTemplateColumns = '2fr 1fr 1fr 2fr auto auto';
     itemDiv.style.gap = '0.5em';
     itemDiv.style.alignItems = 'center';
     itemDiv.style.marginBottom = '0.5em';
     itemDiv.style.padding = '0.5em';
-    itemDiv.style.background = '#f9f9f9';
-    itemDiv.style.borderRadius = '5px';
     
     const nameSpan = document.createElement('strong');
     nameSpan.textContent = item.name;

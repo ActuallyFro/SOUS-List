@@ -2,8 +2,9 @@
 
 A web-based meal planning and grocery list generator that helps you organize your weekly dinners and create consolidated shopping lists.
 
-## 🌐 Live Demo
+Version: 1.2.1
 
+## 🌐 Live Demo
 **[Launch SOUS List App](https://actuallyfro.github.io/SOUS-List/)**
 
 ## ✨ Features
