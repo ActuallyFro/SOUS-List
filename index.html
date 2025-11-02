@@ -391,8 +391,7 @@ body.dark-mode .draggable-item:hover {
     <div class="card">
       <h2>Weekly Meal Plan</h2>
       <div class="day-controls">
-        <button id="remove-day-btn" title="Remove Day">-</button>
-        <button id="add-day-btn" title="Add Day">+</button>
+        <button id="start-new-week-btn" class="secondary" title="Clear all meals and start fresh">Start New Week</button>
       </div>
       <div id="week-slots"></div>
     </div>
@@ -483,7 +482,7 @@ body.dark-mode .draggable-item:hover {
     <div class="card">
       <h2>About SOUS List</h2>
       <p><strong>Simplified Order Utility for a Shopping List</strong></p>
-      <p><strong>Version:</strong> v1.4.1</p>
+      <p><strong>Version:</strong> v1.5</p>
       <p><strong>Release Date:</strong> November 2, 2025</p>
     </div>
 
@@ -711,7 +710,6 @@ const defaultMeals = [
 
 let meals = JSON.parse(localStorage.getItem("meals") || "null") || defaultMeals;
 let weeklyPlan = JSON.parse(localStorage.getItem("weeklyPlan") || "{}");
-let dayCount = parseInt(localStorage.getItem("dayCount") || "5");
 let oneOffItems = JSON.parse(localStorage.getItem("oneOffItems") || "[]");
 let allOneOffItemsMaster = JSON.parse(localStorage.getItem("allOneOffItemsMaster") || "[]");
 
@@ -764,7 +762,6 @@ if (allOneOffItemsMaster.length === 0 && oneOffItems.length > 0) {
 function saveData() {
   localStorage.setItem("meals", JSON.stringify(meals));
   localStorage.setItem("weeklyPlan", JSON.stringify(weeklyPlan));
-  localStorage.setItem("dayCount", dayCount.toString());
   localStorage.setItem("oneOffItems", JSON.stringify(oneOffItems));
   localStorage.setItem("allOneOffItemsMaster", JSON.stringify(allOneOffItemsMaster));
   localStorage.setItem("categories", JSON.stringify(CATEGORIES));
@@ -960,7 +957,11 @@ addMealBtn.onclick = () => {
     const editIndex = editMealIndexEl.value;
     
     if (editIndex !== "") {
+        const oldMeal = meals[editIndex];
         meals[editIndex] = meal; // Update existing
+        
+        // Sync weeklyPlan: Update ingredient references if meal was edited
+        syncWeeklyPlanAfterMealEdit(oldMeal, meal);
     } else {
         meals.push(meal); // Add new
     }
@@ -972,6 +973,48 @@ addMealBtn.onclick = () => {
     renderItems();
     clearMealForm();
 };
+
+// Sync weeklyPlan when a meal's ingredients are renamed/changed
+function syncWeeklyPlanAfterMealEdit(oldMeal, newMeal) {
+    // Find all days using this meal
+    Object.keys(weeklyPlan).forEach(day => {
+        if (weeklyPlan[day].title === newMeal.title) {
+            // Create map of old ingredient names to new names
+            const oldNames = oldMeal.ingredients.map(ing => ing.name);
+            const newNames = newMeal.ingredients.map(ing => ing.name);
+            
+            // Create new ingredients object with updated names
+            const updatedIngredients = {};
+            
+            newMeal.ingredients.forEach((newIng, index) => {
+                const oldIngName = oldNames[index];
+                const newIngName = newIng.name;
+                
+                // If ingredient was renamed, transfer the state from old name to new name
+                if (oldIngName && weeklyPlan[day].ingredients[oldIngName]) {
+                    updatedIngredients[newIngName] = weeklyPlan[day].ingredients[oldIngName];
+                    // Update qty from meal if it changed
+                    if (newIng.qty) {
+                        updatedIngredients[newIngName].qty = newIng.qty;
+                    }
+                } else if (weeklyPlan[day].ingredients[newIngName]) {
+                    // Ingredient name unchanged, keep existing state
+                    updatedIngredients[newIngName] = weeklyPlan[day].ingredients[newIngName];
+                } else {
+                    // New ingredient added to meal
+                    updatedIngredients[newIngName] = {
+                        have: false,
+                        notes: "",
+                        qty: newIng.qty || ""
+                    };
+                }
+            });
+            
+            // Replace with cleaned ingredient list (removes stale names)
+            weeklyPlan[day].ingredients = updatedIngredients;
+        }
+    });
+}
 
 function renderMeals() {
   const searchTerm = mealSearchEl.value.toLowerCase();
@@ -1694,168 +1737,284 @@ document.getElementById('custom-item-btn').onclick = () => {
 
 function renderPlanner() {
   weekSlotsEl.innerHTML = "";
-  const letters = DAY_LETTERS.slice(0, dayCount);
   
-  letters.forEach(l => {
-    const dayData = weeklyPlan[l] || { title: "", ingredients: {} };
-
-    const dayContainer = document.createElement('div');
-    dayContainer.className = 'card';
-    dayContainer.style.marginBottom = '1em';
-
-    const dayHeader = document.createElement('div');
-    dayHeader.style.display = 'flex';
-    dayHeader.style.alignItems = 'center';
-    dayHeader.style.gap = '0.5em';
-
-    const label = document.createElement("label");
-    label.textContent = `${l}. `;
-    label.style.fontWeight = 'bold';
-    
-    const select = document.createElement("select");
-    select.innerHTML = `<option value="">-- Select Dinner --</option>` + 
-                       meals.map(m => `<option value="${m.title}">${m.title}</option>`).join("");
-    select.value = dayData.title;
-    
-    const ingredientsContainer = document.createElement('div');
-    ingredientsContainer.style.display = 'none';
-    ingredientsContainer.style.marginTop = '1em';
-    ingredientsContainer.style.paddingLeft = '1em';
-    ingredientsContainer.style.borderLeft = '3px solid #eee';
-
-    const toggleBtn = document.createElement('button');
-    toggleBtn.textContent = '+';
-    toggleBtn.className = 'blue';
-    toggleBtn.style.padding = '0.2em 0.6em';
-    toggleBtn.style.fontSize = '1em';
-    toggleBtn.style.margin = '0';
-    toggleBtn.onclick = () => {
-        const isHidden = ingredientsContainer.style.display === 'none';
-        ingredientsContainer.style.display = isHidden ? 'block' : 'none';
-        toggleBtn.textContent = isHidden ? '-' : '+';
-        toggleBtn.className = isHidden ? 'purple' : 'blue';
-    };
-
-    dayHeader.appendChild(label);
-    dayHeader.appendChild(select);
-    dayHeader.appendChild(toggleBtn);
-    
-    dayContainer.appendChild(dayHeader);
-    dayContainer.appendChild(ingredientsContainer);
-
-    const renderIngredients = () => {
-        ingredientsContainer.innerHTML = '';
-        const selectedMeal = meals.find(m => m.title === (weeklyPlan[l]?.title || ''));
-        if (!selectedMeal || selectedMeal.ingredients.length === 0) {
-            ingredientsContainer.innerHTML = '<small>No ingredients for this meal.</small>';
-            toggleBtn.style.display = 'none';
-            return;
-        }
-        toggleBtn.style.display = 'inline-block';
-
-        selectedMeal.ingredients.forEach(ing => {
-            const ingState = weeklyPlan[l].ingredients[ing.name] || { have: false, notes: "", qty: ing.qty || "" };
-
-            const ingRow = document.createElement('div');
-            ingRow.style.display = 'grid';
-            ingRow.style.gridTemplateColumns = '2fr 1fr 2fr auto';
-            ingRow.style.gap = '0.5em';
-            ingRow.style.alignItems = 'center';
-            ingRow.style.marginBottom = '0.5em';
-
-            const ingLabel = document.createElement('label');
-            ingLabel.textContent = ing.name;
-            ingLabel.style.fontWeight = 'normal';
-            
-            const qtyInput = document.createElement('input');
-            qtyInput.type = 'text';
-            qtyInput.placeholder = 'Qty...';
-            qtyInput.value = ingState.qty;
-            qtyInput.oninput = (e) => {
-                weeklyPlan[l].ingredients[ing.name].qty = e.target.value;
-                saveData();
-            };
-            
-            const notesInput = document.createElement('input');
-            notesInput.type = 'text';
-            notesInput.placeholder = 'Notes...';
-            notesInput.value = ingState.notes;
-            notesInput.oninput = (e) => {
-                weeklyPlan[l].ingredients[ing.name].notes = e.target.value;
-                saveData();
-            };
-
-            const haveCheckbox = document.createElement('input');
-            haveCheckbox.type = 'checkbox';
-            haveCheckbox.checked = ingState.have;
-            haveCheckbox.onchange = (e) => {
-                weeklyPlan[l].ingredients[ing.name].have = e.target.checked;
-                saveData();
-            };
-            
-            const haveLabel = document.createElement('label');
-            haveLabel.style.display = 'flex';
-            haveLabel.style.alignItems = 'center';
-            haveLabel.style.gap = '0.5em';
-            haveLabel.style.fontWeight = 'normal';
-            haveLabel.appendChild(haveCheckbox);
-            haveLabel.appendChild(document.createTextNode('Have'));
-
-            ingRow.appendChild(ingLabel);
-            ingRow.appendChild(qtyInput);
-            ingRow.appendChild(notesInput);
-            ingRow.appendChild(haveLabel);
-            ingredientsContainer.appendChild(ingRow);
-        });
-    };
-
-    select.onchange = e => {
-        const newMealTitle = e.target.value;
-        const meal = meals.find(m => m.title === newMealTitle);
-        
-        weeklyPlan[l] = {
-            title: newMealTitle,
-            ingredients: meal ? meal.ingredients.reduce((acc, ing) => {
-                acc[ing.name] = { have: false, notes: "", qty: ing.qty || "" };
-                return acc;
-            }, {}) : {}
-        };
-        saveData();
-        renderIngredients();
-    };
-    
-    weekSlotsEl.appendChild(dayContainer);
-    if (dayData.title) {
-        renderIngredients();
-    } else {
-        toggleBtn.style.display = 'none';
-    }
+  // Get all days that have meals assigned
+  const assignedDays = Object.keys(weeklyPlan).filter(key => weeklyPlan[key].title).sort();
+  
+  // Render assigned meals
+  assignedDays.forEach(l => {
+    const dayData = weeklyPlan[l];
+    renderMealSlot(l, dayData);
   });
+  
+  // Render "Add Meal" row for next day
+  renderAddMealRow();
 }
 
-document.getElementById("add-day-btn").onclick = () => {
-    if (dayCount < DAY_LETTERS.length) {
-        dayCount++;
-        saveData();
-        renderPlanner();
-    }
-};
+function renderMealSlot(dayLetter, dayData) {
+  const dayContainer = document.createElement('div');
+  dayContainer.className = 'card';
+  dayContainer.style.marginBottom = '1em';
 
-document.getElementById("remove-day-btn").onclick = () => {
-    if (dayCount > 1) {
-        // Clear data for the day being removed
-        const letterToRemove = DAY_LETTERS[dayCount - 1];
-        if (weeklyPlan[letterToRemove]) {
-            delete weeklyPlan[letterToRemove];
-        }
-        dayCount--;
+  const dayHeader = document.createElement('div');
+  dayHeader.style.display = 'flex';
+  dayHeader.style.alignItems = 'center';
+  dayHeader.style.gap = '0.5em';
+
+  const label = document.createElement("span");
+  label.textContent = `${dayLetter}. ${dayData.title}`;
+  label.style.fontWeight = 'bold';
+  label.style.fontSize = '1.1em';
+  label.style.flex = '1';
+  
+  // Remove button (red -)
+  const removeBtn = document.createElement('button');
+  removeBtn.textContent = '−';
+  removeBtn.className = 'delete';
+  removeBtn.style.padding = '0.4em 0.7em';
+  removeBtn.style.fontSize = '1.2em';
+  removeBtn.style.minWidth = '2.5em';
+  removeBtn.style.lineHeight = '1';
+  removeBtn.style.margin = '0';
+  removeBtn.style.verticalAlign = 'middle';
+  removeBtn.onclick = () => {
+    delete weeklyPlan[dayLetter];
+    saveData();
+    renderPlanner();
+  };
+  
+  // Expand/collapse ingredients button
+  const ingredientsContainer = document.createElement('div');
+  ingredientsContainer.style.display = 'none';
+  ingredientsContainer.style.marginTop = '1em';
+  ingredientsContainer.style.paddingLeft = '1em';
+  ingredientsContainer.style.borderLeft = '3px solid #eee';
+
+  const toggleBtn = document.createElement('button');
+  toggleBtn.textContent = '▼';
+  toggleBtn.className = 'secondary';
+  toggleBtn.style.padding = '0.4em 0.7em';
+  toggleBtn.style.fontSize = '1.2em';
+  toggleBtn.style.minWidth = '2.5em';
+  toggleBtn.style.lineHeight = '1';
+  toggleBtn.style.margin = '0';
+  toggleBtn.style.verticalAlign = 'middle';
+  toggleBtn.style.background = '#ff9800'; // Orange for expand
+  toggleBtn.onclick = () => {
+    const isHidden = ingredientsContainer.style.display === 'none';
+    ingredientsContainer.style.display = isHidden ? 'block' : 'none';
+    toggleBtn.textContent = isHidden ? '▲' : '▼';
+    toggleBtn.style.background = isHidden ? '#9c27b0' : '#ff9800';
+  };
+
+  dayHeader.appendChild(label);
+  dayHeader.appendChild(removeBtn);
+  dayHeader.appendChild(toggleBtn);
+  
+  dayContainer.appendChild(dayHeader);
+  dayContainer.appendChild(ingredientsContainer);
+
+  // Render ingredients
+  const selectedMeal = meals.find(m => m.title === dayData.title);
+  if (selectedMeal && selectedMeal.ingredients.length > 0) {
+    selectedMeal.ingredients.forEach(ing => {
+      const ingState = dayData.ingredients[ing.name] || { have: false, notes: "", qty: ing.qty || "" };
+
+      const ingRow = document.createElement('div');
+      ingRow.style.display = 'grid';
+      ingRow.style.gridTemplateColumns = '2fr 1fr 2fr auto';
+      ingRow.style.gap = '0.5em';
+      ingRow.style.alignItems = 'center';
+      ingRow.style.marginBottom = '0.5em';
+
+      const ingLabel = document.createElement('label');
+      ingLabel.textContent = ing.name;
+      ingLabel.style.fontWeight = 'normal';
+      
+      const qtyInput = document.createElement('input');
+      qtyInput.type = 'text';
+      qtyInput.placeholder = 'Qty...';
+      qtyInput.value = ingState.qty;
+      qtyInput.oninput = (e) => {
+        weeklyPlan[dayLetter].ingredients[ing.name].qty = e.target.value;
+        saveData();
+      };
+      
+      const notesInput = document.createElement('input');
+      notesInput.type = 'text';
+      notesInput.placeholder = 'Notes...';
+      notesInput.value = ingState.notes;
+      notesInput.oninput = (e) => {
+        weeklyPlan[dayLetter].ingredients[ing.name].notes = e.target.value;
+        saveData();
+      };
+
+      const haveCheckbox = document.createElement('input');
+      haveCheckbox.type = 'checkbox';
+      haveCheckbox.checked = ingState.have;
+      haveCheckbox.onchange = (e) => {
+        weeklyPlan[dayLetter].ingredients[ing.name].have = e.target.checked;
+        saveData();
+      };
+      
+      const haveLabel = document.createElement('label');
+      haveLabel.style.display = 'flex';
+      haveLabel.style.alignItems = 'center';
+      haveLabel.style.gap = '0.5em';
+      haveLabel.style.fontWeight = 'normal';
+      haveLabel.appendChild(haveCheckbox);
+      haveLabel.appendChild(document.createTextNode('Have'));
+
+      ingRow.appendChild(ingLabel);
+      ingRow.appendChild(qtyInput);
+      ingRow.appendChild(notesInput);
+      ingRow.appendChild(haveLabel);
+      ingredientsContainer.appendChild(ingRow);
+    });
+  } else {
+    ingredientsContainer.innerHTML = '<small>No ingredients for this meal.</small>';
+  }
+  
+  weekSlotsEl.appendChild(dayContainer);
+}
+
+function renderAddMealRow() {
+  // Find next available day letter
+  const usedLetters = Object.keys(weeklyPlan).filter(key => weeklyPlan[key].title);
+  const nextLetter = DAY_LETTERS.find(l => !usedLetters.includes(l));
+  
+  if (!nextLetter) {
+    // All days used
+    return;
+  }
+  
+  const addContainer = document.createElement('div');
+  addContainer.className = 'card';
+  addContainer.style.marginBottom = '1em';
+  addContainer.style.background = '#f9f9f9';
+
+  const addHeader = document.createElement('div');
+  addHeader.style.display = 'flex';
+  addHeader.style.alignItems = 'center';
+  addHeader.style.gap = '0.5em';
+
+  const label = document.createElement("span");
+  label.textContent = `${nextLetter}. `;
+  label.style.fontWeight = 'bold';
+  label.style.fontSize = '1.2em';
+  
+  // Create searchable dropdown for meal selection
+  const mealDropdownDiv = document.createElement("div");
+  mealDropdownDiv.className = "filterable-dropdown";
+  mealDropdownDiv.style.flex = "1";
+  
+  const mealInput = document.createElement("input");
+  mealInput.type = "text";
+  mealInput.placeholder = "Type to search meals...";
+  
+  const mealDropdownContent = document.createElement("div");
+  mealDropdownContent.className = "filterable-dropdown-content";
+  
+  let selectedMeal = null;
+  
+  const renderMealDropdown = (filteredMeals) => {
+    mealDropdownContent.innerHTML = '';
+    
+    if (filteredMeals.length === 0) {
+      const noResults = document.createElement('div');
+      noResults.className = 'no-results';
+      noResults.textContent = 'No meals found';
+      mealDropdownContent.appendChild(noResults);
+      return;
+    }
+    
+    filteredMeals.forEach(meal => {
+      const div = document.createElement('div');
+      const methodDisplay = meal.method ? `[${meal.method}] ` : '';
+      div.textContent = `${methodDisplay}${meal.title}`;
+      div.onmousedown = (e) => {
+        e.preventDefault();
+        selectedMeal = meal;
+        mealInput.value = meal.title;
+        mealDropdownContent.style.display = 'none';
+      };
+      mealDropdownContent.appendChild(div);
+    });
+  };
+  
+  mealInput.addEventListener('focus', () => {
+    renderMealDropdown(meals);
+    mealDropdownContent.style.display = 'block';
+  });
+  
+  mealInput.addEventListener('input', (e) => {
+    const searchTerm = e.target.value.toLowerCase();
+    const filtered = meals.filter(m => 
+      m.title.toLowerCase().includes(searchTerm) || 
+      (m.method && m.method.toLowerCase().includes(searchTerm))
+    );
+    renderMealDropdown(filtered);
+    mealDropdownContent.style.display = 'block';
+  });
+  
+  mealDropdownDiv.appendChild(mealInput);
+  mealDropdownDiv.appendChild(mealDropdownContent);
+  
+  // Add button (blue +)
+  const addBtn = document.createElement('button');
+  addBtn.textContent = '+';
+  addBtn.className = 'blue';
+  addBtn.style.padding = '0.4em 0.7em';
+  addBtn.style.fontSize = '1.2em';
+  addBtn.style.minWidth = '2.5em';
+  addBtn.style.lineHeight = '1';
+  addBtn.style.margin = '0';
+  addBtn.style.verticalAlign = 'middle';
+  addBtn.onclick = () => {
+    if (!selectedMeal) {
+      alert('Please select a meal first');
+      return;
+    }
+    
+    // Add meal to weekly plan
+    weeklyPlan[nextLetter] = {
+      title: selectedMeal.title,
+      ingredients: selectedMeal.ingredients.reduce((acc, ing) => {
+        acc[ing.name] = { have: false, notes: "", qty: ing.qty || "" };
+        return acc;
+      }, {})
+    };
+    saveData();
+    renderPlanner();
+  };
+
+  addHeader.appendChild(label);
+  addHeader.appendChild(mealDropdownDiv);
+  addHeader.appendChild(addBtn);
+  
+  addContainer.appendChild(addHeader);
+  weekSlotsEl.appendChild(addContainer);
+}
+
+document.getElementById("start-new-week-btn").onclick = () => {
+    if (confirm("Start a new week? This will clear all current meal selections and one-off items. Your Dinner Dictionary and item history will be preserved.")) {
+        // Clear weekly plan
+        weeklyPlan = {};
+        
+        // Clear one-off items for this week (but keep master list)
+        oneOffItems = [];
+        
         saveData();
         renderPlanner();
+        renderOneOffItems();
+        
+        alert("New week started! Your meal plan and one-off items have been cleared.");
     }
 };
 
 document.getElementById("generate-markdown-btn").onclick = () => {
-  const letters = DAY_LETTERS.slice(0, dayCount);
+  // Get all assigned days in order
+  const letters = Object.keys(weeklyPlan).filter(key => weeklyPlan[key].title).sort();
   let md = "# __Potential meals__\n";
   md += "_Generated from: [SOUS List App](https://actuallyfro.github.io/SOUS-List/)_\n\n";
   const shoppingList = {}; // { Produce: { "Apples": { meals: ['A'], aisle: 'p' } } }
@@ -1873,18 +2032,20 @@ document.getElementById("generate-markdown-btn").onclick = () => {
                 if (!shoppingList[ing.category]) {
                     shoppingList[ing.category] = {};
                 }
+                
+                const ingState = dayPlan.ingredients[ing.name] || { have: false, notes: "", qty: ing.qty || "" };
+                
                 if (!shoppingList[ing.category][ing.name]) {
-                    const ingState = dayPlan.ingredients[ing.name] || { have: false, notes: "", qty: ing.qty || "" };
+                    // First occurrence - initialize with current state
                     shoppingList[ing.category][ing.name] = { 
                         meals: [], 
                         aisle: ing.aisle,
                         have: ingState.have,
-                        notes: ingState.notes,
-                        qty: ingState.qty
+                        notes: ingState.notes || "",
+                        qty: ingState.qty || ""
                     };
                 } else {
                     // Ingredient already exists - aggregate quantities and notes
-                    const ingState = dayPlan.ingredients[ing.name] || { have: false, notes: "", qty: ing.qty || "" };
                     
                     // Add quantity if present
                     if (ingState.qty) {
@@ -1902,7 +2063,7 @@ document.getElementById("generate-markdown-btn").onclick = () => {
                           : ingState.notes;
                     }
                     
-                    // If marked as "have" in any meal, keep it as "have"
+                    // If marked as "have" in any meal, we have it (can use for all meals)
                     if (ingState.have) {
                         shoppingList[ing.category][ing.name].have = true;
                     }
@@ -1941,7 +2102,7 @@ document.getElementById("generate-markdown-btn").onclick = () => {
           ? `${shoppingList[item.category][item.name].notes}; ${item.notes}` 
           : item.notes;
       }
-      // If marked as "have" in one-off, override to "have"
+      // If marked as "have" in one-off, we have it
       if (item.have) {
         shoppingList[item.category][item.name].have = true;
       }
@@ -2146,7 +2307,7 @@ document.getElementById("copy-markdown-btn").onclick = () => {
 // --- SETTINGS TAB ---
 
 document.getElementById("export-btn").onclick = () => {
-  const data = JSON.stringify({ meals, weeklyPlan, dayCount, oneOffItems, allOneOffItemsMaster, categories: CATEGORIES }, null, 2);
+  const data = JSON.stringify({ meals, weeklyPlan, oneOffItems, allOneOffItemsMaster, categories: CATEGORIES }, null, 2);
   const blob = new Blob([data], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -2184,7 +2345,6 @@ document.getElementById("import-file").onchange = e => {
         const data = JSON.parse(evt.target.result);
         if (data.meals) meals = data.meals;
         if (data.weeklyPlan) weeklyPlan = data.weeklyPlan;
-        if (data.dayCount) dayCount = parseInt(data.dayCount);
         if (data.oneOffItems) oneOffItems = data.oneOffItems;
         if (data.allOneOffItemsMaster) allOneOffItemsMaster = data.allOneOffItemsMaster;
         if (data.categories) CATEGORIES = data.categories;
