@@ -483,7 +483,7 @@ body.dark-mode .draggable-item:hover {
     <div class="card">
       <h2>About SOUS List</h2>
       <p><strong>Simplified Order Utility for a Shopping List</strong></p>
-      <p><strong>Version:</strong> v1.4</p>
+      <p><strong>Version:</strong> v1.4.1</p>
       <p><strong>Release Date:</strong> November 2, 2025</p>
     </div>
 
@@ -713,6 +713,7 @@ let meals = JSON.parse(localStorage.getItem("meals") || "null") || defaultMeals;
 let weeklyPlan = JSON.parse(localStorage.getItem("weeklyPlan") || "{}");
 let dayCount = parseInt(localStorage.getItem("dayCount") || "5");
 let oneOffItems = JSON.parse(localStorage.getItem("oneOffItems") || "[]");
+let allOneOffItemsMaster = JSON.parse(localStorage.getItem("allOneOffItemsMaster") || "[]");
 
 // Data Migration & Initialization ---
 // Converts old string-based weeklyPlan to new object-based one
@@ -746,6 +747,17 @@ oneOffItems.forEach(item => {
     }
 });
 
+// Migration: Populate master list from existing oneOffItems if master list is empty
+if (allOneOffItemsMaster.length === 0 && oneOffItems.length > 0) {
+    allOneOffItemsMaster = oneOffItems.map(item => ({
+        name: item.name,
+        category: item.category,
+        aisle: item.aisle,
+        qty: item.qty || ""
+    }));
+    localStorage.setItem("allOneOffItemsMaster", JSON.stringify(allOneOffItemsMaster));
+}
+
 
 // --- DATA PERSISTENCE ---
 
@@ -754,6 +766,7 @@ function saveData() {
   localStorage.setItem("weeklyPlan", JSON.stringify(weeklyPlan));
   localStorage.setItem("dayCount", dayCount.toString());
   localStorage.setItem("oneOffItems", JSON.stringify(oneOffItems));
+  localStorage.setItem("allOneOffItemsMaster", JSON.stringify(allOneOffItemsMaster));
   localStorage.setItem("categories", JSON.stringify(CATEGORIES));
 }
 
@@ -1040,8 +1053,20 @@ function populateQuickAddDropdown() {
     });
   });
   
-  // Add one-off items to the dropdown
+  // Add one-off items to the dropdown (both current week and master list)
   oneOffItems.forEach(item => {
+    if (!uniqueIngredients.has(item.name)) {
+      uniqueIngredients.set(item.name, {
+        name: item.name,
+        category: item.category,
+        aisle: item.aisle,
+        qty: item.qty || ""
+      });
+    }
+  });
+  
+  // Add all items from master list
+  allOneOffItemsMaster.forEach(item => {
     if (!uniqueIngredients.has(item.name)) {
       uniqueIngredients.set(item.name, {
         name: item.name,
@@ -1332,7 +1357,7 @@ function getAllItems() {
     });
   });
   
-  // Include one-off items (they show as used in 0 meals but are still managed items)
+  // Include one-off items from current week (they show as used in 0 meals but are still managed items)
   oneOffItems.forEach(item => {
     const key = item.name.toLowerCase();
     if (itemsMap.has(key)) {
@@ -1343,6 +1368,21 @@ function getAllItems() {
       itemsMap.set(key, {
         name: item.name,
         count: 0, // Not used in any meal
+        category: item.category,
+        aisle: item.aisle,
+        qty: item.qty || ""
+      });
+    }
+  });
+  
+  // Include all items from master list (items that were previously used)
+  allOneOffItemsMaster.forEach(item => {
+    const key = item.name.toLowerCase();
+    if (!itemsMap.has(key)) {
+      // Item not currently in use, but exists in master list
+      itemsMap.set(key, {
+        name: item.name,
+        count: 0, // Not currently used
         category: item.category,
         aisle: item.aisle,
         qty: item.qty || ""
@@ -1539,11 +1579,12 @@ function renderOneOffItems() {
     deleteBtn.textContent = 'Delete';
     deleteBtn.style.margin = '0';
     deleteBtn.onclick = () => {
+      // Remove from this week's list only (keep in master list for future use)
       oneOffItems.splice(index, 1);
       saveData();
-      populateQuickAddDropdown(); // Refresh dropdown
       renderOneOffItems();
-      renderItems(); // Update Manage Items list
+      // Note: NOT calling populateQuickAddDropdown() or renderItems() 
+      // because item still exists in master list
     };
     
     itemDiv.appendChild(nameSpan);
@@ -1580,7 +1621,21 @@ document.getElementById('quick-add-btn').onclick = () => {
     have: quickAddHaveEl.checked
   };
   
+  // Add to current week's one-off items
   oneOffItems.push(item);
+  
+  // Add to master list if not already there
+  const masterItem = {
+    name: ingredientName,
+    category: selectedCategory,
+    aisle: selectedAisle || '',
+    qty: quickAddQtyEl.value.trim()
+  };
+  const existsInMaster = allOneOffItemsMaster.some(i => i.name.toLowerCase() === ingredientName.toLowerCase());
+  if (!existsInMaster) {
+    allOneOffItemsMaster.push(masterItem);
+  }
+  
   saveData();
   populateQuickAddDropdown(); // Refresh dropdown with new item
   renderOneOffItems();
@@ -1610,7 +1665,21 @@ document.getElementById('custom-item-btn').onclick = () => {
     have: customItemHaveEl.checked
   };
   
+  // Add to current week's one-off items
   oneOffItems.push(item);
+  
+  // Add to master list if not already there
+  const masterItem = {
+    name: name,
+    category: customItemCategoryEl.value,
+    aisle: customItemAisleEl.value.trim(),
+    qty: customItemQtyEl.value.trim()
+  };
+  const existsInMaster = allOneOffItemsMaster.some(i => i.name.toLowerCase() === name.toLowerCase());
+  if (!existsInMaster) {
+    allOneOffItemsMaster.push(masterItem);
+  }
+  
   saveData();
   populateQuickAddDropdown(); // Refresh dropdown with new item
   renderOneOffItems();
@@ -2077,7 +2146,7 @@ document.getElementById("copy-markdown-btn").onclick = () => {
 // --- SETTINGS TAB ---
 
 document.getElementById("export-btn").onclick = () => {
-  const data = JSON.stringify({ meals, weeklyPlan, dayCount, oneOffItems, categories: CATEGORIES }, null, 2);
+  const data = JSON.stringify({ meals, weeklyPlan, dayCount, oneOffItems, allOneOffItemsMaster, categories: CATEGORIES }, null, 2);
   const blob = new Blob([data], { type: "application/json" });
   const a = document.createElement("a");
   a.href = URL.createObjectURL(blob);
@@ -2117,6 +2186,7 @@ document.getElementById("import-file").onchange = e => {
         if (data.weeklyPlan) weeklyPlan = data.weeklyPlan;
         if (data.dayCount) dayCount = parseInt(data.dayCount);
         if (data.oneOffItems) oneOffItems = data.oneOffItems;
+        if (data.allOneOffItemsMaster) allOneOffItemsMaster = data.allOneOffItemsMaster;
         if (data.categories) CATEGORIES = data.categories;
         
         saveData();
