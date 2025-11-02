@@ -407,7 +407,7 @@ body.dark-mode .draggable-item:hover {
     <div class="card">
       <h2>About SOUS List</h2>
       <p><strong>Simplified Order Utility for a Shopping List</strong></p>
-      <p><strong>Version:</strong> v1.2.1</p>
+      <p><strong>Version:</strong> v1.2.2</p>
       <p><strong>Release Date:</strong> November 2, 2025</p>
     </div>
 
@@ -1048,7 +1048,7 @@ function renderCategories() {
       }
     };
     
-    // Drag events
+    // Mouse drag events
     catDiv.addEventListener('dragstart', (e) => {
       catDiv.classList.add('dragging');
       e.dataTransfer.effectAllowed = 'move';
@@ -1076,6 +1076,60 @@ function renderCategories() {
     catDiv.addEventListener('drop', (e) => {
       e.preventDefault();
       const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+      const items = Array.from(categoriesListEl.children);
+      const newOrder = items.map(item => CATEGORIES[parseInt(item.dataset.index)]);
+      CATEGORIES.length = 0;
+      CATEGORIES.push(...newOrder);
+      saveData();
+      renderCategories();
+      populateCustomCategoryDropdown();
+    });
+    
+    // Touch events for mobile
+    let touchStartY = 0;
+    let touchElement = null;
+    
+    catDiv.addEventListener('touchstart', (e) => {
+      touchStartY = e.touches[0].clientY;
+      touchElement = catDiv;
+      catDiv.classList.add('dragging');
+      catDiv.style.opacity = '0.5';
+    });
+    
+    catDiv.addEventListener('touchmove', (e) => {
+      if (!touchElement) return;
+      e.preventDefault();
+      
+      const touch = e.touches[0];
+      const currentY = touch.clientY;
+      
+      // Find which element we're over
+      const elements = Array.from(categoriesListEl.children);
+      for (let i = 0; i < elements.length; i++) {
+        const elem = elements[i];
+        if (elem === touchElement) continue;
+        
+        const rect = elem.getBoundingClientRect();
+        if (currentY >= rect.top && currentY <= rect.bottom) {
+          const midpoint = rect.top + rect.height / 2;
+          if (currentY < midpoint) {
+            categoriesListEl.insertBefore(touchElement, elem);
+          } else {
+            categoriesListEl.insertBefore(touchElement, elem.nextSibling);
+          }
+          break;
+        }
+      }
+    });
+    
+    catDiv.addEventListener('touchend', () => {
+      if (!touchElement) return;
+      
+      catDiv.classList.remove('dragging');
+      catDiv.style.opacity = '';
+      touchElement = null;
+      
+      // Save new order
       const items = Array.from(categoriesListEl.children);
       const newOrder = items.map(item => CATEGORIES[parseInt(item.dataset.index)]);
       CATEGORIES.length = 0;
