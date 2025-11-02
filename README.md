@@ -1,4 +1,4 @@
-# 🍽️ SOUS List - Smart Organized User Shopping List
+# 🍽️ SOUS List - Simplified Order Utility for a Shopping List
 
 A web-based meal planning and grocery list generator that helps you organize your weekly dinners and create consolidated shopping lists.
 

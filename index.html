@@ -51,6 +51,87 @@ input[type="checkbox"]:checked {
   accent-color: #4caf50;
 }
 
+/* Toggle switch styles */
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  width: 50px;
+  height: 24px;
+}
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.3s;
+  border-radius: 24px;
+}
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+}
+.toggle-switch input:checked + .toggle-slider {
+  background-color: #4caf50;
+}
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(26px);
+}
+body.dark-mode .toggle-slider {
+  background-color: #555;
+}
+body.dark-mode .toggle-switch input:checked + .toggle-slider {
+  background-color: #4caf50;
+}
+
+/* Drag and drop styles */
+.draggable-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+  padding: 0.5em;
+  margin-bottom: 0.5em;
+  background: #f9f9f9;
+  border-radius: 4px;
+  cursor: move;
+  border: 1px solid #ddd;
+}
+.draggable-item:hover {
+  background: #f0f0f0;
+}
+.draggable-item.dragging {
+  opacity: 0.5;
+}
+.drag-handle {
+  cursor: grab;
+  font-size: 1.2em;
+  color: #999;
+}
+.drag-handle:active {
+  cursor: grabbing;
+}
+body.dark-mode .draggable-item {
+  background: #333;
+  border-color: #444;
+}
+body.dark-mode .draggable-item:hover {
+  background: #3a3a3a;
+}
+
 /* Filterable dropdown styles */
 .filterable-dropdown {
   position: relative;
@@ -188,7 +269,7 @@ input[type="checkbox"]:checked {
 </style>
 </head>
 <body>
-<header><h1>🍽️ Smart Organized User Shopping List (SOUS List)</h1></header>
+<header><h1>🍽️ Simplified Order Utility for a Shopping List (SOUS List)</h1></header>
 <nav>
   <button id="tab-planner" class="active">Weekly Planner</button>
   <button id="tab-dictionary">Dinner Dictionary</button>
@@ -249,9 +330,9 @@ input[type="checkbox"]:checked {
       </div>
       <div id="quick-add-content" class="collapsible-content">
         <p>Add ingredients from your Dinner Dictionary</p>
-        <label>Select Ingredient
+        <label>Select Item
           <div class="filterable-dropdown">
-            <input type="text" id="quick-add-ingredient-input" placeholder="Type to search ingredients..." autocomplete="off">
+            <input type="text" id="quick-add-ingredient-input" placeholder="Type to search items..." autocomplete="off">
             <div id="quick-add-dropdown-content" class="filterable-dropdown-content"></div>
           </div>
         </label>
@@ -305,7 +386,10 @@ input[type="checkbox"]:checked {
     </div>
 
     <div class="card">
+      <h2>Shopping List</h2>
+      <p>Generate your consolidated markdown shopping list</p>
       <button class="export" id="generate-markdown-btn">Generate Markdown Shopping List</button>
+      <button class="blue" id="copy-markdown-btn" style="display:none;">Copy to Clipboard</button>
       <pre id="markdown-output"></pre>
     </div>
   </section>
@@ -313,15 +397,42 @@ input[type="checkbox"]:checked {
   <section id="settings" style="display:none;">
     <div class="card">
       <h2>About SOUS List</h2>
-      <p><strong>Version:</strong> v1.1</p>
-      <p><strong>Release Date:</strong> October 26, 2025</p>
+      <p><strong>Simplified Order Utility for a Shopping List</strong></p>
+      <p><strong>Version:</strong> v1.2</p>
+      <p><strong>Release Date:</strong> November 2, 2025</p>
+    </div>
+
+    <div class="card">
+      <h2>Options</h2>
+      <label style="display: flex; align-items: center; gap: 1em; margin-bottom: 0.5em;">
+        <span>Include 'Have' Items in List</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="include-have-items-toggle" checked>
+          <span class="toggle-slider"></span>
+        </label>
+      </label>
+      <small style="color: #666;">When enabled, items marked as "Have" appear as ✅. When disabled, they are excluded from the markdown list.</small>
     </div>
 
     <div class="card">
       <h2>Appearance</h2>
-      <label style="display: flex; align-items: center; gap: 0.5em;">
-        <input type="checkbox" id="dark-mode-toggle">
-        <span>Enable Dark Mode</span>
+      <label style="display: flex; align-items: center; gap: 1em;">
+        <span>Dark Mode</span>
+        <label class="toggle-switch">
+          <input type="checkbox" id="dark-mode-toggle">
+          <span class="toggle-slider"></span>
+        </label>
+      </label>
+    </div>
+
+    <div class="card">
+      <h2>Import / Export Data</h2>
+      <label>Export Version (optional)
+        <input type="text" id="export-version" placeholder="e.g. v1, family-mealplan, Holidays">
+      </label>
+      <button class="export" id="export-btn">Export JSON</button>
+      <label>Import JSON
+        <input type="file" id="import-file" accept=".json" />
       </label>
     </div>
 
@@ -335,17 +446,23 @@ input[type="checkbox"]:checked {
       </label>
       <button class="save" id="add-category-btn">Add Category</button>
     </div>
-    
+
     <div class="card">
-      <h2>Import / Export Data</h2>
-      <label>Export Version (optional)
-        <input type="text" id="export-version" placeholder="e.g. v1, family-mealplan, Holidays">
+      <h2>Manage Items</h2>
+      <p>Review and manage all ingredients/items in your meals</p>
+      <label>Search Items
+        <input type="text" id="items-search" placeholder="Search by item name...">
       </label>
-      <button class="export" id="export-btn">Export JSON</button>
-      <label>Import JSON
-        <input type="file" id="import-file" accept=".json" />
+      <label>Sort By
+        <select id="items-sort">
+          <option value="name">Name (A-Z)</option>
+          <option value="usage">Usage Count (High to Low)</option>
+        </select>
       </label>
-      <hr style="margin: 1.5em 0;">
+      <div id="items-list" style="margin-top: 1em;"></div>
+    </div>
+
+    <div class="card">
       <h2>Reset Application</h2>
       <button class="delete" id="reset-btn">Clear All Data (Reset)</button>
     </div>
@@ -529,6 +646,9 @@ const newCategoryInputEl = document.getElementById("new-category-input");
 const categoriesListEl = document.getElementById("categories-list");
 const mealSearchEl = document.getElementById("meal-search");
 const mealSortEl = document.getElementById("meal-sort");
+const itemsListEl = document.getElementById("items-list");
+const itemsSearchEl = document.getElementById("items-search");
+const itemsSortEl = document.getElementById("items-sort");
 
 // Store all ingredients for Quick Add
 let allIngredients = [];
@@ -695,8 +815,10 @@ addMealBtn.onclick = () => {
     }
     
     saveData();
+    updateAllIngredientNames();
     renderMeals();
     renderPlanner(); // Update planner dropdowns
+    renderItems();
     clearMealForm();
 };
 
@@ -760,8 +882,10 @@ function deleteMeal(i) {
   if (!confirm(`Are you sure you want to delete "${meals[i].title}"?`)) return;
   meals.splice(i, 1);
   saveData();
+  updateAllIngredientNames();
   renderMeals();
   renderPlanner();
+  renderItems();
 }
 
 // --- PLANNER TAB ---
@@ -863,13 +987,15 @@ function renderCategories() {
   categoriesListEl.innerHTML = '';
   CATEGORIES.forEach((category, index) => {
     const catDiv = document.createElement('div');
-    catDiv.style.display = 'flex';
-    catDiv.style.alignItems = 'center';
-    catDiv.style.gap = '0.5em';
-    catDiv.style.marginBottom = '0.5em';
-    catDiv.style.padding = '0.5em';
-    catDiv.style.background = '#f9f9f9';
-    catDiv.style.borderRadius = '5px';
+    catDiv.className = 'draggable-item';
+    catDiv.draggable = true;
+    catDiv.dataset.index = index;
+    
+    // Drag handle
+    const dragHandle = document.createElement('span');
+    dragHandle.className = 'drag-handle';
+    dragHandle.textContent = '☰';
+    dragHandle.title = 'Drag to reorder';
     
     const catInput = document.createElement('input');
     catInput.type = 'text';
@@ -913,6 +1039,44 @@ function renderCategories() {
       }
     };
     
+    // Drag events
+    catDiv.addEventListener('dragstart', (e) => {
+      catDiv.classList.add('dragging');
+      e.dataTransfer.effectAllowed = 'move';
+      e.dataTransfer.setData('text/plain', index);
+    });
+    
+    catDiv.addEventListener('dragend', () => {
+      catDiv.classList.remove('dragging');
+    });
+    
+    catDiv.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      const draggingItem = document.querySelector('.dragging');
+      if (draggingItem && draggingItem !== catDiv) {
+        const rect = catDiv.getBoundingClientRect();
+        const midpoint = rect.top + rect.height / 2;
+        if (e.clientY < midpoint) {
+          catDiv.parentNode.insertBefore(draggingItem, catDiv);
+        } else {
+          catDiv.parentNode.insertBefore(draggingItem, catDiv.nextSibling);
+        }
+      }
+    });
+    
+    catDiv.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const fromIndex = parseInt(e.dataTransfer.getData('text/plain'));
+      const items = Array.from(categoriesListEl.children);
+      const newOrder = items.map(item => CATEGORIES[parseInt(item.dataset.index)]);
+      CATEGORIES.length = 0;
+      CATEGORIES.push(...newOrder);
+      saveData();
+      renderCategories();
+      populateCustomCategoryDropdown();
+    });
+    
+    catDiv.appendChild(dragHandle);
     catDiv.appendChild(catInput);
     catDiv.appendChild(deleteBtn);
     categoriesListEl.appendChild(catDiv);
@@ -937,6 +1101,164 @@ document.getElementById('add-category-btn').onclick = () => {
   newCategoryInputEl.value = '';
 };
 
+// --- MANAGE ITEMS ---
+
+function getAllItems() {
+  const itemsMap = new Map(); // item name -> {count, category, aisle, qty}
+  
+  // Collect from meals
+  meals.forEach(meal => {
+    meal.ingredients.forEach(ing => {
+      const key = ing.name.toLowerCase();
+      if (itemsMap.has(key)) {
+        itemsMap.get(key).count++;
+      } else {
+        itemsMap.set(key, {
+          name: ing.name,
+          count: 1,
+          category: ing.category,
+          aisle: ing.aisle,
+          qty: ing.qty
+        });
+      }
+    });
+  });
+  
+  return Array.from(itemsMap.values());
+}
+
+function renderItems() {
+  const items = getAllItems();
+  const searchTerm = itemsSearchEl.value.toLowerCase();
+  const sortBy = itemsSortEl.value;
+  
+  // Filter items
+  const filteredItems = items.filter(item => 
+    item.name.toLowerCase().includes(searchTerm)
+  );
+  
+  // Sort items
+  filteredItems.sort((a, b) => {
+    if (sortBy === 'name') {
+      return a.name.localeCompare(b.name, undefined, {sensitivity: 'base'});
+    } else if (sortBy === 'usage') {
+      return b.count - a.count;
+    }
+    return 0;
+  });
+  
+  itemsListEl.innerHTML = '';
+  
+  if (filteredItems.length === 0) {
+    itemsListEl.innerHTML = '<p style="color: #999;">No items found.</p>';
+    return;
+  }
+  
+  filteredItems.forEach(item => {
+    const itemDiv = document.createElement('div');
+    itemDiv.style.display = 'flex';
+    itemDiv.style.alignItems = 'center';
+    itemDiv.style.gap = '0.5em';
+    itemDiv.style.marginBottom = '0.5em';
+    itemDiv.style.padding = '0.5em';
+    itemDiv.style.background = '#f9f9f9';
+    itemDiv.style.borderRadius = '5px';
+    
+    const itemInfo = document.createElement('div');
+    itemInfo.style.flex = '1';
+    itemInfo.innerHTML = `<strong>${item.name}</strong><br>
+      <small>Used in <strong>${item.count}</strong> meal${item.count > 1 ? 's' : ''} | Category: ${item.category || 'None'}</small>`;
+    
+    const renameBtn = document.createElement('button');
+    renameBtn.className = 'blue';
+    renameBtn.textContent = 'Rename';
+    renameBtn.style.margin = '0';
+    renameBtn.onclick = () => {
+      const newName = prompt(`Rename "${item.name}" to:`, item.name);
+      if (!newName || newName.trim() === '' || newName.trim() === item.name) return;
+      
+      const trimmedName = newName.trim();
+      
+      // Update in all meals
+      let updateCount = 0;
+      meals.forEach(meal => {
+        meal.ingredients.forEach(ing => {
+          if (ing.name.toLowerCase() === item.name.toLowerCase()) {
+            ing.name = trimmedName;
+            updateCount++;
+          }
+        });
+      });
+      
+      // Update in weekly plan
+      Object.keys(weeklyPlan).forEach(day => {
+        if (weeklyPlan[day].ingredients[item.name]) {
+          weeklyPlan[day].ingredients[trimmedName] = weeklyPlan[day].ingredients[item.name];
+          delete weeklyPlan[day].ingredients[item.name];
+        }
+      });
+      
+      // Update one-off items
+      oneOffItems.forEach(oneOff => {
+        if (oneOff.name.toLowerCase() === item.name.toLowerCase()) {
+          oneOff.name = trimmedName;
+        }
+      });
+      
+      saveData();
+      updateAllIngredientNames();
+      renderItems();
+      renderMeals();
+      renderPlanner();
+      alert(`Renamed "${item.name}" to "${trimmedName}" in ${updateCount} location(s).`);
+    };
+    
+    const deleteBtn = document.createElement('button');
+    deleteBtn.className = 'delete';
+    deleteBtn.textContent = 'Delete';
+    deleteBtn.style.margin = '0';
+    deleteBtn.onclick = () => {
+      if (!confirm(`Delete "${item.name}" from all meals? This will remove it from ${item.count} meal(s).`)) return;
+      
+      // Remove from all meals
+      meals.forEach(meal => {
+        meal.ingredients = meal.ingredients.filter(ing => 
+          ing.name.toLowerCase() !== item.name.toLowerCase()
+        );
+      });
+      
+      // Remove from weekly plan
+      Object.keys(weeklyPlan).forEach(day => {
+        if (weeklyPlan[day].ingredients[item.name]) {
+          delete weeklyPlan[day].ingredients[item.name];
+        }
+      });
+      
+      // Remove from one-off items
+      oneOffItems = oneOffItems.filter(oneOff => 
+        oneOff.name.toLowerCase() !== item.name.toLowerCase()
+      );
+      
+      saveData();
+      updateAllIngredientNames();
+      renderItems();
+      renderMeals();
+      renderPlanner();
+      renderOneOffItems();
+      alert(`Deleted "${item.name}" from all meals.`);
+    };
+    
+    itemDiv.appendChild(itemInfo);
+    itemDiv.appendChild(renameBtn);
+    itemDiv.appendChild(deleteBtn);
+    itemsListEl.appendChild(itemDiv);
+  });
+}
+
+// Add event listeners for items search and sort
+itemsSearchEl.addEventListener('input', renderItems);
+itemsSortEl.addEventListener('change', renderItems);
+
 function renderOneOffItems() {
   oneOffItemsListEl.innerHTML = '';
   if (oneOffItems.length === 0) {
@@ -947,7 +1269,7 @@ function renderOneOffItems() {
   oneOffItems.forEach((item, index) => {
     const itemDiv = document.createElement('div');
     itemDiv.style.display = 'grid';
-    itemDiv.style.gridTemplateColumns = '1fr 2fr auto auto';
+    itemDiv.style.gridTemplateColumns = '2fr 1fr 1fr 2fr auto auto';
     itemDiv.style.gap = '0.5em';
     itemDiv.style.alignItems = 'center';
     itemDiv.style.marginBottom = '0.5em';
@@ -957,6 +1279,14 @@ function renderOneOffItems() {
     
     const nameSpan = document.createElement('strong');
     nameSpan.textContent = item.name;
+    
+    const qtySpan = document.createElement('small');
+    qtySpan.textContent = item.qty || '-';
+    qtySpan.style.color = '#666';
+    
+    const aisleSpan = document.createElement('small');
+    aisleSpan.textContent = item.aisle ? `Aisle ${item.aisle}` : '-';
+    aisleSpan.style.color = '#666';
     
     const notesSpan = document.createElement('small');
     notesSpan.textContent = item.notes || 'No notes';
@@ -989,6 +1319,8 @@ function renderOneOffItems() {
     };
     
     itemDiv.appendChild(nameSpan);
+    itemDiv.appendChild(qtySpan);
+    itemDiv.appendChild(aisleSpan);
     itemDiv.appendChild(notesSpan);
     itemDiv.appendChild(haveLabel);
     itemDiv.appendChild(deleteBtn);
@@ -1318,23 +1650,90 @@ document.getElementById("generate-markdown-btn").onclick = () => {
   md += "\n# __Grocery List__ [Related Meal Label/Tag]\n";
   
   // 3. Build Markdown Shopping List from Aggregated Data
+  // Check if "Have" items should be included
+  const includeHaveItems = document.getElementById("include-have-items-toggle").checked;
+  
   CATEGORIES.forEach(category => {
     if (shoppingList[category]) {
-        md += `## ${category}\n`;
-        Object.keys(shoppingList[category]).sort().forEach(itemName => {
-            const item = shoppingList[category][itemName];
-            const mealTags = item.meals.length > 0 ? ' ' + item.meals.map(m => `[${m}]`).join('') : '';
-            const aisleText = item.aisle ? ` (Aisle ${item.aisle})` : '';
-            const qtyText = item.qty ? ` {${item.qty}}` : '';
-            const notesText = item.notes ? ` -- ${item.notes}` : '';
-            const checkbox = item.have ? '✅' : '||✅||';
-            
-            md += `* ${checkbox} ${itemName}${qtyText}${aisleText}${notesText}${mealTags}\n`;
+        const categoryItems = Object.keys(shoppingList[category]).sort().filter(itemName => {
+          const item = shoppingList[category][itemName];
+          // If includeHaveItems is OFF and item is marked as "have", skip it
+          if (!includeHaveItems && item.have) {
+            return false;
+          }
+          return true;
         });
+        
+        // Only add category header if there are items to display
+        if (categoryItems.length > 0) {
+          md += `## ${category}\n`;
+          categoryItems.forEach(itemName => {
+              const item = shoppingList[category][itemName];
+              const mealTags = item.meals.length > 0 ? ' ' + item.meals.map(m => `[${m}]`).join('') : '';
+              const aisleText = item.aisle ? ` (Aisle ${item.aisle})` : '';
+              const qtyText = item.qty ? ` {${item.qty}}` : '';
+              const notesText = item.notes ? ` -- ${item.notes}` : '';
+              const checkbox = item.have ? '✅' : '||✅||';
+              
+              md += `* ${checkbox} ${itemName}${qtyText}${aisleText}${notesText}${mealTags}\n`;
+          });
+        }
     }
   });
 
   document.getElementById("markdown-output").textContent = md.trim();
+  
+  // Show the copy button after generating markdown
+  document.getElementById("copy-markdown-btn").style.display = "inline-block";
+};
+
+// Copy markdown to clipboard
+document.getElementById("copy-markdown-btn").onclick = () => {
+  const markdownText = document.getElementById("markdown-output").textContent;
+  
+  if (!markdownText || markdownText.trim() === "") {
+    alert("No shopping list to copy. Please generate a list first.");
+    return;
+  }
+  
+  // Use the Clipboard API
+  navigator.clipboard.writeText(markdownText).then(() => {
+    // Show success feedback
+    const btn = document.getElementById("copy-markdown-btn");
+    const originalText = btn.textContent;
+    btn.textContent = "✓ Copied!";
+    btn.style.background = "#4caf50";
+    
+    setTimeout(() => {
+      btn.textContent = originalText;
+      btn.style.background = "";
+    }, 2000);
+  }).catch(err => {
+    // Fallback for older browsers
+    const textArea = document.createElement("textarea");
+    textArea.value = markdownText;
+    textArea.style.position = "fixed";
+    textArea.style.left = "-999999px";
+    document.body.appendChild(textArea);
+    textArea.select();
+    
+    try {
+      document.execCommand('copy');
+      const btn = document.getElementById("copy-markdown-btn");
+      const originalText = btn.textContent;
+      btn.textContent = "✓ Copied!";
+      btn.style.background = "#4caf50";
+      
+      setTimeout(() => {
+        btn.textContent = originalText;
+        btn.style.background = "";
+      }, 2000);
+    } catch (err) {
+      alert("Failed to copy to clipboard. Please select and copy manually.");
+    }
+    
+    document.body.removeChild(textArea);
+  });
 };
 
 // --- SETTINGS TAB ---
@@ -1387,6 +1786,7 @@ document.getElementById("import-file").onchange = e => {
         renderPlanner();
         renderOneOffItems();
         renderCategories();
+        renderItems();
         populateCustomCategoryDropdown();
         alert("Data imported successfully!");
     } catch (err) {
@@ -1403,6 +1803,26 @@ document.getElementById("reset-btn").onclick = () => {
         location.reload();
     }
 };
+
+// --- OPTIONS ---
+
+const includeHaveItemsToggle = document.getElementById("include-have-items-toggle");
+const includeHaveItems = localStorage.getItem("includeHaveItems");
+
+// Apply saved preference (default is true if not set)
+if (includeHaveItems === "false") {
+  includeHaveItemsToggle.checked = false;
+} else {
+  includeHaveItemsToggle.checked = true;
+  if (includeHaveItems === null) {
+    localStorage.setItem("includeHaveItems", "true");
+  }
+}
+
+// Toggle include have items
+includeHaveItemsToggle.addEventListener("change", () => {
+  localStorage.setItem("includeHaveItems", includeHaveItemsToggle.checked.toString());
+});
 
 // --- DARK MODE ---
 
@@ -1448,6 +1868,7 @@ renderMeals();
 renderPlanner();
 renderOneOffItems();
 renderCategories();
+renderItems();
 
 // Set initial tab to Weekly Planner
 switchTab("planner");
