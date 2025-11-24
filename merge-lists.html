@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>SOUS List Merger</title>
+  <style>
+    body { font-family: sans-serif; margin: 2em; }
+    .card { background: #f9f9f9; padding: 1em; border-radius: 8px; margin-bottom: 2em; }
+    label { font-weight: bold; }
+    input[type=file] { margin-bottom: 1em; }
+    button { padding: 0.5em 1em; font-size: 1em; margin-top: 1em; }
+    #result, #preview { white-space: pre-wrap; background: #eee; padding: 1em; border-radius: 8px; margin-top: 1em; }
+  </style>
+</head>
+<body>
+  <h1>SOUS List Merger</h1>
+  <div class="card">
+    <label for="main-file">Main SOUS List JSON:</label><br>
+    <input type="file" id="main-file" accept="application/json"><br>
+    <label for="merge-file">Merge/Additions JSON:</label><br>
+    <input type="file" id="merge-file" accept="application/json"><br>
+    <button id="preview-btn" disabled>Show Preview</button>
+    <button id="merge-btn" disabled>Merge Lists</button>
+    <a id="download-link" style="display:none;" download="SOUS-List_MERGED.json">Download Merged JSON</a>
+  </div>
+  <div id="preview"></div>
+  <div id="result"></div>
+  <script>
+    function dedupeByName(arr) {
+      const map = {};
+      arr.forEach(obj => { map[obj.title || obj.name] = obj; });
+      return Object.values(map);
+    }
+    function mergeWeeklyPlan(main, merge) {
+      // Main takes precedence for each day letter
+      return { ...merge, ...main };
+    }
+    function mergeOneOffItems(main, merge) {
+      const map = {};
+      [...main, ...merge].forEach(item => {
+        map[item.name + '|' + item.category] = item;
+      });
+      return Object.values(map);
+    }
+    function mergeCategories(main, merge) {
+      return Array.from(new Set([...(main||[]), ...(merge||[])]));
+    }
+    let mainData = null, mergeData = null;
+    let mainLoaded = false, mergeLoaded = false;
+    function updateButtonStates() {
+      console.log('updateButtonStates:', {mainLoaded, mergeLoaded});
+      const previewBtn = document.getElementById('preview-btn');
+      previewBtn.disabled = !(mainLoaded && mergeLoaded);
+      document.getElementById('merge-btn').disabled = true;
+    }
+    document.getElementById('main-file').onchange = e => {
+      mainLoaded = false;
+      updateButtonStates();
+      const file = e.target.files[0];
+      if (!file) { console.log('No main file selected'); return; }
+      const reader = new FileReader();
+      reader.onload = evt => {
+        try {
+          mainData = JSON.parse(evt.target.result);
+          mainLoaded = true;
+          console.log('Main file loaded:', mainData);
+        } catch (err) {
+          console.error('Error parsing main file:', err);
+          mainLoaded = false;
+        }
+        updateButtonStates();
+      };
+      reader.readAsText(file);
+    };
+    document.getElementById('merge-file').onchange = e => {
+      mergeLoaded = false;
+      updateButtonStates();
+      const file = e.target.files[0];
+      if (!file) { console.log('No merge file selected'); return; }
+      const reader = new FileReader();
+      reader.onload = evt => {
+        try {
+          mergeData = JSON.parse(evt.target.result);
+          mergeLoaded = true;
+          console.log('Merge file loaded:', mergeData);
+        } catch (err) {
+          console.error('Error parsing merge file:', err);
+          mergeLoaded = false;
+        }
+        updateButtonStates();
+      };
+      reader.readAsText(file);
+    };
+    function getPreview(mainData, mergeData) {
+      // Meals
+      const mainMeals = (mainData.meals||[]).map(m=>m.title);
+      const mergeMeals = (mergeData.meals||[]).map(m=>m.title);
+      const newMeals = mergeMeals.filter(m=>!mainMeals.includes(m));
+      // WeeklyPlan
+      const mainDays = Object.keys(mainData.weeklyPlan||{});
+      const mergeDays = Object.keys(mergeData.weeklyPlan||{});
+      const newDays = mergeDays.filter(d=>!mainDays.includes(d));
+      // OneOffItems
+      const mainOneOff = (mainData.oneOffItems||[]).map(i=>i.name+'|'+i.category);
+      const mergeOneOff = (mergeData.oneOffItems||[]).map(i=>i.name+'|'+i.category);
+      const newOneOff = mergeOneOff.filter(i=>!mainOneOff.includes(i));
+      // Master Items
+      const mainMaster = (mainData.allOneOffItemsMaster||[]).map(i=>i.name+'|'+i.category);
+      const mergeMaster = (mergeData.allOneOffItemsMaster||[]).map(i=>i.name+'|'+i.category);
+      const newMaster = mergeMaster.filter(i=>!mainMaster.includes(i));
+      // Categories
+      const mainCats = mainData.categories||[];
+      const mergeCats = mergeData.categories||[];
+      const newCats = mergeCats.filter(c=>!mainCats.includes(c));
+      return { newMeals, newDays, newOneOff, newMaster, newCats };
+    }
+    document.getElementById('preview-btn').onclick = () => {
+      console.log('Preview button clicked:', {mainLoaded, mergeLoaded});
+      if (!mainLoaded || !mergeLoaded) {
+        document.getElementById('preview').innerHTML = '<span style="color:red">Error: Both files must be loaded before previewing.</span>';
+        return;
+      }
+      const preview = getPreview(mainData, mergeData);
+      console.log('Preview:', preview);
+      let html = '<h2>Preview of Additions</h2>';
+      html += `<b>Meals to Add:</b> ${preview.newMeals.length ? preview.newMeals.join(', ') : '<i>None</i>'}<br>`;
+      html += `<b>WeeklyPlan Days to Add:</b> ${preview.newDays.length ? preview.newDays.join(', ') : '<i>None</i>'}<br>`;
+      html += `<b>One-Off Items to Add:</b> ${preview.newOneOff.length ? preview.newOneOff.join(', ') : '<i>None</i>'}<br>`;
+      html += `<b>Master Items to Add:</b> ${preview.newMaster.length ? preview.newMaster.join(', ') : '<i>None</i>'}<br>`;
+      html += `<b>Categories to Add:</b> ${preview.newCats.length ? preview.newCats.join(', ') : '<i>None</i>'}<br>`;
+      document.getElementById('preview').innerHTML = html;
+      document.getElementById('merge-btn').disabled = false;
+    };
+    document.getElementById('merge-btn').onclick = () => {
+      console.log('Merge button clicked:', {mainLoaded, mergeLoaded});
+      if (!mainData || !mergeData) {
+        alert('Please select both files.');
+        return;
+      }
+      // Merge meals
+      const meals = dedupeByName([...(mainData.meals||[]), ...(mergeData.meals||[])]);
+      // Merge weeklyPlan
+      const weeklyPlan = mergeWeeklyPlan(mainData.weeklyPlan||{}, mergeData.weeklyPlan||{});
+      // Merge oneOffItems
+      const oneOffItems = mergeOneOffItems(mainData.oneOffItems||[], mergeData.oneOffItems||[]);
+      // Merge allOneOffItemsMaster
+      const allOneOffItemsMaster = mergeOneOffItems(mainData.allOneOffItemsMaster||[], mergeData.allOneOffItemsMaster||[]);
+      // Merge categories
+      const categories = mergeCategories(mainData.categories||[], mergeData.categories||[]);
+      const merged = { meals, weeklyPlan, oneOffItems, allOneOffItemsMaster, categories };
+      const json = JSON.stringify(merged, null, 2);
+      document.getElementById('result').textContent = json;
+      const blob = new Blob([json], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.getElementById('download-link');
+      link.href = url;
+      link.style.display = 'inline-block';
+    };
+  </script>
+</body>
+</html>

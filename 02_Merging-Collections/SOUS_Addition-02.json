@@ -1,0 +1,1103 @@
+{
+  "meals": [
+    {
+      "title": "Taco Salad & Quesadillas",
+      "method": "Griddle",
+      "ingredients": [
+        {
+          "name": "Bags of Chips",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "3"
+        },
+        {
+          "name": "Shredded Cheese",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "16 oz"
+        },
+        {
+          "name": "Lettuce",
+          "category": "Produce - Refrigerated",
+          "aisle": "",
+          "qty": "1 bag"
+        },
+        {
+          "name": "Ground Beef",
+          "category": "Chilled - Meat",
+          "aisle": "",
+          "qty": "3 lbs"
+        },
+        {
+          "name": "Catalina Dressing",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Bottle"
+        },
+        {
+          "name": "Mexican/Spanish Rice",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Box"
+        },
+        {
+          "name": "Refried Beans",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Can"
+        },
+        {
+          "name": "Onions",
+          "category": "Produce",
+          "aisle": "",
+          "qty": "1"
+        },
+        {
+          "name": "Sour Cream",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "8 Oz"
+        },
+        {
+          "name": "Medium Tortillas",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1"
+        }
+      ]
+    },
+    {
+      "title": "Breakfast for Dinner",
+      "method": "Grill/Griddle",
+      "ingredients": [
+        {
+          "name": "Bacon",
+          "category": "Chilled - Meat",
+          "aisle": "",
+          "qty": "1 lbs"
+        },
+        {
+          "name": "Eggs",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "12"
+        },
+        {
+          "name": "Hashbrowns",
+          "category": "Frozen",
+          "aisle": "",
+          "qty": "1 Bag"
+        },
+        {
+          "name": "Pancake Mix",
+          "category": "Boxes/aisles",
+          "aisle": "5",
+          "qty": "4 cups"
+        },
+        {
+          "name": "Pumpkin Bread/Pancake mix",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "4 cups"
+        },
+        {
+          "name": "Sliced American Cheese",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "12 Slices"
+        },
+        {
+          "name": "Syrup",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1"
+        },
+        {
+          "name": "Fruit - Canned",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "2"
+        },
+        {
+          "name": "Bread - Sandwich",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1"
+        }
+      ]
+    },
+    {
+      "title": "Chicken Fajitas",
+      "method": "Black stone",
+      "ingredients": [
+        {
+          "name": "Mexican/Spanish Rice",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Box"
+        },
+        {
+          "name": "Chicken Breasts",
+          "category": "Chilled - Meat",
+          "aisle": "",
+          "qty": "6"
+        },
+        {
+          "name": "Shredded Colby Jack",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "16 oz"
+        },
+        {
+          "name": "Green Pepper",
+          "category": "Produce",
+          "aisle": "",
+          "qty": "2"
+        },
+        {
+          "name": "Red Pepper",
+          "category": "Produce",
+          "aisle": "",
+          "qty": "1"
+        },
+        {
+          "name": "Onions",
+          "category": "Produce",
+          "aisle": "",
+          "qty": "3"
+        },
+        {
+          "name": "Medium Tortillas",
+          "category": "Breads",
+          "aisle": "",
+          "qty": "1 Bag"
+        },
+        {
+          "name": "Cumin",
+          "category": "Spices",
+          "aisle": "",
+          "qty": "1 Table Spoon"
+        },
+        {
+          "name": "Lime Juice",
+          "category": "Produce",
+          "aisle": "",
+          "qty": "1 Oz"
+        }
+      ]
+    },
+    {
+      "title": "Chili Cheese Dogs/Hot Dogs/Brats",
+      "method": "Grill/Griddle",
+      "ingredients": [
+        {
+          "name": "Chili",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Can"
+        },
+        {
+          "name": "Bags of Chips",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "2"
+        },
+        {
+          "name": "Corn",
+          "category": "Frozen",
+          "aisle": "",
+          "qty": "1 Bag"
+        },
+        {
+          "name": "Hot dogs",
+          "category": "Chilled - Meat",
+          "aisle": "",
+          "qty": "1 Packs"
+        },
+        {
+          "name": "\"a Side\" (e.g., Potato Salad / Coleslaw)",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "1"
+        },
+        {
+          "name": "Hot Dog Buns",
+          "category": "Breads",
+          "aisle": "",
+          "qty": "1 Pack"
+        },
+        {
+          "name": "Brats",
+          "category": "Chilled - Meat",
+          "aisle": "",
+          "qty": "1 Pack"
+        }
+      ]
+    },
+    {
+      "title": "Baked Teriyaki Chicken w/ Rice",
+      "method": "Oven",
+      "ingredients": [
+        {
+          "name": "Rice Bag",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "2 cups"
+        },
+        {
+          "name": "Teriyaki Chicken",
+          "category": "Frozen",
+          "aisle": "",
+          "qty": "1 Bag"
+        },
+        {
+          "name": "Colby Jack Shredded",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "8 oz"
+        },
+        {
+          "name": "Bagged Vegetables",
+          "category": "Frozen",
+          "aisle": "",
+          "qty": "1"
+        }
+      ]
+    },
+    {
+      "title": "Chicken Quesadillas",
+      "method": "Griddle",
+      "ingredients": [
+        {
+          "name": "Shredded Colby Jack",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "8 oz"
+        },
+        {
+          "name": "Sliced Colby Jack",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "1 Pack"
+        },
+        {
+          "name": "Queso Dip",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "16 Oz"
+        },
+        {
+          "name": "Medium Tortillas",
+          "category": "Breads",
+          "aisle": "",
+          "qty": "1 Bag"
+        },
+        {
+          "name": "Chicken - Canned",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "3 cans"
+        }
+      ]
+    },
+    {
+      "title": "Chicken Alfredo",
+      "method": "Oven",
+      "ingredients": [
+        {
+          "name": "Corn",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Can"
+        },
+        {
+          "name": "Texas Toast",
+          "category": "Frozen",
+          "aisle": "",
+          "qty": "2 Boxes"
+        },
+        {
+          "name": "Chicken Breasts",
+          "category": "Chilled - Meat",
+          "aisle": "",
+          "qty": "4 Large"
+        },
+        {
+          "name": "Pasta - Fettucine",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Box"
+        },
+        {
+          "name": "Alfredo Sauce",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Jar"
+        }
+      ]
+    },
+    {
+      "title": "Spaghetti + Meatballs",
+      "method": "Stove",
+      "ingredients": [
+        {
+          "name": "Spaghetti Sauce",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Jar"
+        },
+        {
+          "name": "Texas Toast",
+          "category": "Frozen",
+          "aisle": "",
+          "qty": "2 Boxes"
+        },
+        {
+          "name": "Meatballs",
+          "category": "Frozen",
+          "aisle": "",
+          "qty": "1 Bag"
+        },
+        {
+          "name": "Corn",
+          "category": "Frozen",
+          "aisle": "",
+          "qty": "1 Bag"
+        },
+        {
+          "name": "\"a Side\" (e.g., Potato Salad / Coleslaw)",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "1"
+        },
+        {
+          "name": "Green Beans",
+          "category": "Produce - Refrigerated",
+          "aisle": "",
+          "qty": "1 Bag"
+        }
+      ]
+    },
+    {
+      "title": "Mississippi Roast",
+      "method": "Slow Cooker",
+      "ingredients": [
+        {
+          "name": "Chuck Roast",
+          "category": "Chilled - Meat",
+          "aisle": "",
+          "qty": ">3 lbs"
+        },
+        {
+          "name": "Ranch Dressing Powder",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Packet"
+        },
+        {
+          "name": "Au Jus Powder",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Packet"
+        },
+        {
+          "name": "Butter",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "1/2 Stick"
+        },
+        {
+          "name": "Pepperoncini Peppers",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Jar"
+        },
+        {
+          "name": "Potatoes - Baked/Mashed",
+          "category": "Produce",
+          "aisle": "",
+          "qty": "5 Lbs"
+        }
+      ]
+    },
+    {
+      "title": "Meatloaf",
+      "method": "Oven",
+      "ingredients": [
+        {
+          "name": "Ground Beef",
+          "category": "Chilled - Meat",
+          "aisle": "",
+          "qty": "3 lbs"
+        },
+        {
+          "name": "Garlic Minced",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 oz"
+        },
+        {
+          "name": "Salad",
+          "category": "Produce - Refrigerated",
+          "aisle": "",
+          "qty": "1 Bag"
+        },
+        {
+          "name": "Potatoes - Baked/Mashed",
+          "category": "Produce",
+          "aisle": "",
+          "qty": "3 Lbs"
+        },
+        {
+          "name": "Bagged Vegetables",
+          "category": "Frozen",
+          "aisle": "",
+          "qty": "2 Bags"
+        },
+        {
+          "name": "Ketchup",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Cup"
+        },
+        {
+          "name": "Brown Sugar",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Cup"
+        },
+        {
+          "name": "Bread Crumbs",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "1 Cup"
+        },
+        {
+          "name": "Eggs",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "1"
+        }
+      ]
+    },
+    {
+      "title": "Grilled Cheese and Tomato Soup",
+      "method": "Oven",
+      "ingredients": [
+        {
+          "name": "Bread - Sandwich",
+          "category": "Breads",
+          "aisle": "",
+          "qty": "1 loaf"
+        },
+        {
+          "name": "Sliced American Cheese",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "1 pack"
+        },
+        {
+          "name": "Sliced Colby Jack",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "1 pack"
+        },
+        {
+          "name": "Sliced Gouda",
+          "category": "Chilled - Dairy",
+          "aisle": "",
+          "qty": "1 pack"
+        },
+        {
+          "name": "Tomato Soup",
+          "category": "Boxes/aisles",
+          "aisle": "",
+          "qty": "2 cans"
+        },
+        {
+          "name": "Bagged Vegetables",
+          "category": "Frozen",
+          "aisle": "",
+          "qty": "1"
+        }
+      ]
+    },
+    {
+      "title": "LEFTOVERS",
+      "method": "",
+      "ingredients": []
+    },
+    {
+      "title": "Order Pizza",
+      "method": "Takeout",
+      "ingredients": []
+    },
+    {
+      "title": "Homemade Pizza",
+      "method": "Oven",
+      "ingredients": [
+        {
+          "name": "Flour",
+          "category": "Boxes/aisles",
+          "qty": "3 3/4 cups",
+          "aisle": ""
+        },
+        {
+          "name": "Kosher Salt",
+          "category": "Boxes/aisles",
+          "qty": "1 tbsp",
+          "aisle": ""
+        },
+        {
+          "name": "Yeast",
+          "category": "Boxes/aisles",
+          "qty": "1 pack",
+          "aisle": ""
+        },
+        {
+          "name": "Sugar",
+          "category": "Boxes/aisles",
+          "qty": "1 1/2 tbsp",
+          "aisle": ""
+        },
+        {
+          "name": "Olive oil",
+          "category": "Boxes/aisles",
+          "qty": "5 tbsp",
+          "aisle": ""
+        },
+        {
+          "name": "Cornmeal",
+          "category": "Boxes/aisles",
+          "qty": "2/3 cup",
+          "aisle": ""
+        },
+        {
+          "name": "Pizza Sauce",
+          "category": "Boxes/aisles",
+          "qty": "1 jar",
+          "aisle": ""
+        },
+        {
+          "name": "Shredded Cheese",
+          "category": "Chilled - Dairy",
+          "qty": "16 oz",
+          "aisle": ""
+        },
+        {
+          "name": "Pepperoni",
+          "category": "Boxes/aisles",
+          "qty": "1 bag",
+          "aisle": ""
+        }
+      ]
+    }
+  ],
+  "weeklyPlan": {
+    "A": {
+      "title": "Mississippi Roast",
+      "ingredients": {
+        "Chuck Roast": {
+          "have": false,
+          "notes": "",
+          "qty": ">3 lbs"
+        },
+        "Ranch Dressing Powder": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Packet"
+        },
+        "Au Jus Powder": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Packet"
+        },
+        "Butter": {
+          "have": true,
+          "notes": "",
+          "qty": "1/2 Stick"
+        },
+        "Pepperoncini Peppers": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Jar"
+        },
+        "Potatoes - Baked/Mashed": {
+          "have": true,
+          "notes": "",
+          "qty": "5 Lbs"
+        }
+      }
+    },
+    "B": {
+      "title": "Meatloaf",
+      "ingredients": {
+        "Ground Beef": {
+          "have": false,
+          "notes": "",
+          "qty": "3 lbs"
+        },
+        "Garlic Minced": {
+          "have": true,
+          "notes": "",
+          "qty": "1 oz"
+        },
+        "Salad": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Bag"
+        },
+        "Potatoes - Baked/Mashed": {
+          "have": true,
+          "notes": "",
+          "qty": "3 Lbs"
+        },
+        "Bagged Vegetables": {
+          "have": true,
+          "notes": "",
+          "qty": "2 Bags"
+        },
+        "Ketchup": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Cup"
+        },
+        "Brown Sugar": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Cup"
+        },
+        "Bread Crumbs": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Cup"
+        },
+        "Eggs": {
+          "have": true,
+          "notes": "",
+          "qty": "1"
+        }
+      }
+    },
+    "C": {
+      "title": "Order Pizza",
+      "ingredients": {}
+    },
+    "D": {
+      "title": "LEFTOVERS",
+      "ingredients": {}
+    },
+    "E": {
+      "title": "Breakfast for Dinner",
+      "ingredients": {
+        "Bacon": {
+          "have": true,
+          "notes": "",
+          "qty": "1 lbs"
+        },
+        "Eggs": {
+          "have": true,
+          "notes": "",
+          "qty": "12"
+        },
+        "Hashbrowns": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Bag"
+        },
+        "Pancake Mix": {
+          "have": true,
+          "notes": "",
+          "qty": "4 cups"
+        },
+        "Pumpkin Bread/Pancake mix": {
+          "have": true,
+          "notes": "",
+          "qty": "4 cups"
+        },
+        "Sliced American Cheese": {
+          "have": true,
+          "notes": "",
+          "qty": "12 Slices"
+        },
+        "Syrup": {
+          "have": true,
+          "notes": "",
+          "qty": "1"
+        },
+        "Fruit - Canned": {
+          "have": true,
+          "notes": "",
+          "qty": "2"
+        },
+        "Bread - Sandwich": {
+          "have": true,
+          "notes": "",
+          "qty": "1"
+        }
+      }
+    },
+    "F": {
+      "title": "Grilled Cheese and Tomato Soup",
+      "ingredients": {
+        "Bread - Sandwich": {
+          "have": true,
+          "notes": "",
+          "qty": "1 loaf"
+        },
+        "Sliced American Cheese": {
+          "have": true,
+          "notes": "",
+          "qty": "1 pack"
+        },
+        "Sliced Colby Jack": {
+          "have": true,
+          "notes": "",
+          "qty": "1 pack"
+        },
+        "Sliced Gouda": {
+          "have": true,
+          "notes": "",
+          "qty": "1 pack"
+        },
+        "Tomato Soup": {
+          "have": true,
+          "notes": "",
+          "qty": "2 cans"
+        },
+        "Bagged Vegetables": {
+          "have": true,
+          "notes": "",
+          "qty": "1"
+        }
+      }
+    },
+    "G": {
+      "title": "Chicken Alfredo",
+      "ingredients": {
+        "Corn": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Can"
+        },
+        "Texas Toast": {
+          "have": true,
+          "notes": "",
+          "qty": "2 Boxes"
+        },
+        "Chicken Breasts": {
+          "have": true,
+          "notes": "",
+          "qty": "4 Large"
+        },
+        "Pasta - Fettucine": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Box"
+        },
+        "Alfredo Sauce": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Jar"
+        }
+      }
+    },
+    "H": {
+      "title": "Chicken Quesadillas",
+      "ingredients": {
+        "Shredded Colby Jack": {
+          "have": true,
+          "notes": "",
+          "qty": "8 oz"
+        },
+        "Sliced Colby Jack": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Pack"
+        },
+        "Queso Dip": {
+          "have": true,
+          "notes": "",
+          "qty": "16 Oz"
+        },
+        "Medium Tortillas": {
+          "have": true,
+          "notes": "",
+          "qty": "1 Bag"
+        },
+        "Chicken - Canned": {
+          "have": true,
+          "notes": "",
+          "qty": "3 cans"
+        }
+      }
+    }
+  },
+  "oneOffItems": [
+    {
+      "name": "Nutella",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "1 Jar",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Hummus - Garlic",
+      "category": "Produce - Refrigerated",
+      "aisle": "",
+      "qty": "1",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Pretzel Sticks",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "1 Bag",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Tissues",
+      "category": "Side Aisle (e.g., Medicine)",
+      "aisle": "",
+      "qty": "2 Boxes",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "NyQuil",
+      "category": "Side Aisle (e.g., Medicine)",
+      "aisle": "",
+      "qty": "1 Bottle",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "DayQuil",
+      "category": "Side Aisle (e.g., Medicine)",
+      "aisle": "",
+      "qty": "1 Bottle",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Deodorant",
+      "category": "Side Aisle (e.g., Medicine)",
+      "aisle": "",
+      "qty": "1 Stick",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Body Wash",
+      "category": "Side Aisle (e.g., Medicine)",
+      "aisle": "",
+      "qty": "1 Bottle",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Milk",
+      "category": "Chilled - Dairy",
+      "aisle": "",
+      "qty": "1 Gallon",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Almond Milk",
+      "category": "Chilled - Dairy",
+      "aisle": "",
+      "qty": "1 Carton",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Crackers - Goldfish",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "1 Box",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Popcorn - Butter Oil",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "1 Bottle",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Starcrunch",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "1 Box",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Cosmic Brownies",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "1 Box",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Flour",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "5 Lbs",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Avocado",
+      "category": "Produce",
+      "aisle": "",
+      "qty": "2-4",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Bananas",
+      "category": "Produce",
+      "aisle": "",
+      "qty": "4",
+      "notes": "",
+      "have": true
+    },
+    {
+      "name": "Apples - Green",
+      "category": "Produce",
+      "aisle": "",
+      "qty": "1 Bag",
+      "notes": "",
+      "have": true
+    }
+  ],
+  "allOneOffItemsMaster": [
+    {
+      "name": "Nutella",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "1 Jar"
+    },
+    {
+      "name": "Hummus - Garlic",
+      "category": "Produce - Refrigerated",
+      "aisle": "",
+      "qty": "1"
+    },
+    {
+      "name": "Pretzel Sticks",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "1 Bag"
+    },
+    {
+      "name": "Tissues",
+      "category": "Side Aisle (e.g., Medicine)",
+      "aisle": "",
+      "qty": "2 Boxes"
+    },
+    {
+      "name": "NyQuil",
+      "category": "Side Aisle (e.g., Medicine)",
+      "aisle": "",
+      "qty": "1 Bottle"
+    },
+    {
+      "name": "DayQuil",
+      "category": "Side Aisle (e.g., Medicine)",
+      "aisle": "",
+      "qty": "1 Bottle"
+    },
+    {
+      "name": "Deodorant",
+      "category": "Side Aisle (e.g., Medicine)",
+      "aisle": "",
+      "qty": "1 Stick"
+    },
+    {
+      "name": "Body Wash",
+      "category": "Side Aisle (e.g., Medicine)",
+      "aisle": "",
+      "qty": "1 Bottle"
+    },
+    {
+      "name": "Milk",
+      "category": "Chilled - Dairy",
+      "aisle": "",
+      "qty": "1 Gallon"
+    },
+    {
+      "name": "Almond Milk",
+      "category": "Chilled - Dairy",
+      "aisle": "",
+      "qty": "1 Carton"
+    },
+    {
+      "name": "Crackers - Goldfish",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "1 Box"
+    },
+    {
+      "name": "Popcorn - Butter Oil",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "1 Bottle"
+    },
+    {
+      "name": "Starcrunch",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "1 Box"
+    },
+    {
+      "name": "Cosmic Brownies",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "1 Box"
+    },
+    {
+      "name": "Flour",
+      "category": "Boxes/aisles",
+      "aisle": "",
+      "qty": "5 Lbs"
+    },
+    {
+      "name": "Avocado",
+      "category": "Produce",
+      "aisle": "",
+      "qty": "2-4"
+    },
+    {
+      "name": "Bananas",
+      "category": "Produce",
+      "aisle": "",
+      "qty": "4"
+    },
+    {
+      "name": "Apples - Green",
+      "category": "Produce",
+      "aisle": "",
+      "qty": "1 Bag"
+    }
+  ],
+  "categories": [
+    "Chilled - Dairy",
+    "Frozen",
+    "Boxes/aisles",
+    "Chilled - Meat",
+    "Produce",
+    "Produce - Refrigerated",
+    "Breads",
+    "Spices",
+    "Side Aisle (e.g., Medicine)"
+  ]
+}
